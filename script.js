@@ -367,6 +367,10 @@ This is a fully client-side application. Your content never leaves your browser 
       titleSpan.className = 'tab-title';
       titleSpan.textContent = tab.title || 'Untitled';
       titleSpan.title = tab.title || 'Untitled';
+      titleSpan.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        renameTab(tab.id);
+      });
 
       // Three-dot menu button
       const menuBtn = document.createElement('button');
@@ -379,6 +383,9 @@ This is a fully client-side application. Your content never leaves your browser 
       const dropdown = document.createElement('div');
       dropdown.className = 'tab-menu-dropdown';
       dropdown.innerHTML =
+        '<button class="tab-menu-item" data-action="pin"><i class="bi bi-pin"></i> <span class="pin-label">Pin</span></button>' +
+        '<button class="tab-menu-item" data-action="tag"><i class="bi bi-tag"></i> Tag</button>' +
+        '<div class="tab-ctx-divider"></div>' +
         '<button class="tab-menu-item" data-action="rename"><i class="bi bi-pencil"></i> Rename</button>' +
         '<button class="tab-menu-item" data-action="duplicate"><i class="bi bi-files"></i> Duplicate</button>' +
         '<button class="tab-menu-item tab-menu-item-danger" data-action="delete"><i class="bi bi-trash"></i> Delete</button>';
@@ -406,12 +413,18 @@ This is a fully client-side application. Your content never leaves your browser 
         actionBtn.addEventListener('click', function(e) {
           e.stopPropagation();
           menuBtn.classList.remove('open');
-          const action = actionBtn.getAttribute('data-action');
+          const action = actionBtn.dataset.action || actionBtn.getAttribute('data-action');
           if (action === 'rename') renameTab(tab.id);
           else if (action === 'duplicate') duplicateTab(tab.id);
           else if (action === 'delete') deleteTab(tab.id);
+          else if (action === 'pin') togglePinTab(tab.id);
+          else if (action === 'tag') promptTagTab(tab.id);
         });
       });
+
+      // Update pin label
+      const pinLabel = dropdown.querySelector('.pin-label');
+      if (pinLabel && tab.pinned) pinLabel.textContent = 'Unpin';
 
       item.appendChild(titleSpan);
       item.appendChild(menuBtn);
@@ -1191,10 +1204,26 @@ This is a fully client-side application. Your content never leaves your browser 
     });
   });
 
+  let autoSnapshotTimer = null;
   markdownEditor.addEventListener("input", function() {
     debouncedRender();
     clearTimeout(saveTabStateTimeout);
     saveTabStateTimeout = setTimeout(saveCurrentTabState, 500);
+
+    // Auto-snapshot: debounced 5s after stopping typing
+    clearTimeout(autoSnapshotTimer);
+    autoSnapshotTimer = setTimeout(() => {
+      const content = markdownEditor.value;
+      if (!content.trim()) return; // skip empty
+      const allHistory = loadHistory();
+      const tabHistory = allHistory.filter(s => s.tabId === activeTabId);
+      const last = tabHistory.length > 0 ? tabHistory[tabHistory.length - 1] : null;
+      // Only save if content changed by at least 20 chars or 5% difference
+      if (!last || Math.abs(content.length - (last.content || '').length) >= 20) {
+        const currentTab = tabs.find(t => t.id === activeTabId);
+        saveShareSnapshot(content, currentTab ? currentTab.title : 'Untitled');
+      }
+    }, 5000);
   });
   
   // Tab key handler to insert indentation instead of moving focus
@@ -1334,6 +1363,55 @@ This is a fully client-side application. Your content never leaves your browser 
       alert("HTML export failed: " + e.message);
     }
   });
+
+  // Single-file app download
+  const exportSingleFile = document.getElementById('export-singlefile');
+  if (exportSingleFile) {
+    exportSingleFile.addEventListener('click', async function(e) {
+      e.preventDefault();
+      try {
+        exportSingleFile.textContent = 'Building…';
+
+        // Fetch all external assets
+        const [cssText, jsText] = await Promise.all([
+          fetch('styles.css').then(r => r.text()),
+          fetch('script.js').then(r => r.text())
+        ]);
+
+        // Read current index.html and inline everything
+        const htmlSource = await fetch('index.html').then(r => r.text());
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlSource, 'text/html');
+
+        // Replace <link href="styles.css"> with inline <style>
+        doc.querySelectorAll('link[href="styles.css"]').forEach(el => {
+          const style = doc.createElement('style');
+          style.textContent = cssText;
+          el.replaceWith(style);
+        });
+
+        // Replace <script src="script.js"> with inline <script>
+        doc.querySelectorAll('script[src="script.js"]').forEach(el => {
+          const script = doc.createElement('script');
+          script.textContent = jsText;
+          el.replaceWith(script);
+        });
+
+        const finalHtml = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+        const outBlob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(outBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'md-preview.html';
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('Failed to build single file: ' + err.message);
+      } finally {
+        exportSingleFile.innerHTML = '<i class="bi bi-file-zip me-1"></i>Download Single File (.html)';
+      }
+    });
+  }
 
   // ============================================
   // Page-Break Detection Functions (Story 1.1)
@@ -2314,31 +2392,21 @@ This is a fully client-side application. Your content never leaves your browser 
   }
 
   // ---- Zoom modal state ----
-  let modalZoomScale = 1;
-  let modalPanX = 0;
-  let modalPanY = 0;
-  let modalIsDragging = false;
-  let modalDragStart = { x: 0, y: 0 };
   let modalCurrentSvgEl = null;
+  let panzoomInstance = null;
 
   const mermaidZoomModal   = document.getElementById('mermaid-zoom-modal');
   const mermaidModalDiagram = document.getElementById('mermaid-modal-diagram');
 
-  function applyModalTransform() {
-    if (modalCurrentSvgEl) {
-      modalCurrentSvgEl.style.transform =
-        `translate(${modalPanX}px, ${modalPanY}px) scale(${modalZoomScale})`;
-    }
-  }
-
   function closeMermaidModal() {
     if (!mermaidZoomModal.classList.contains('active')) return;
     mermaidZoomModal.classList.remove('active');
+    if (panzoomInstance) {
+      panzoomInstance.dispose();
+      panzoomInstance = null;
+    }
     mermaidModalDiagram.innerHTML = '';
     modalCurrentSvgEl = null;
-    modalZoomScale = 1;
-    modalPanX = 0;
-    modalPanY = 0;
   }
 
   /** Opens the zoom modal with the SVG from the given container. */
@@ -2346,10 +2414,11 @@ This is a fully client-side application. Your content never leaves your browser 
     const svgEl = container.querySelector('svg');
     if (!svgEl) return;
 
+    if (panzoomInstance) {
+      panzoomInstance.dispose();
+      panzoomInstance = null;
+    }
     mermaidModalDiagram.innerHTML = '';
-    modalZoomScale = 1;
-    modalPanX = 0;
-    modalPanY = 0;
 
     const svgClone = svgEl.cloneNode(true);
     // Remove fixed dimensions so it sizes naturally inside the modal
@@ -2357,13 +2426,24 @@ This is a fully client-side application. Your content never leaves your browser 
     svgClone.removeAttribute('height');
     svgClone.style.width  = 'auto';
     svgClone.style.height = 'auto';
-    svgClone.style.maxWidth  = '80vw';
-    svgClone.style.maxHeight = '60vh';
-    svgClone.style.transformOrigin = 'center';
+    svgClone.style.maxWidth  = '100%';
+    svgClone.style.maxHeight = '100%';
     mermaidModalDiagram.appendChild(svgClone);
     modalCurrentSvgEl = svgClone;
 
     mermaidZoomModal.classList.add('active');
+
+    // Initialize anvaka/panzoom — works natively with SVG elements
+    // Supports smooth wheel zoom, touch pinch-to-zoom, and drag-to-pan out of the box
+    setTimeout(() => {
+      panzoomInstance = panzoom(svgClone, {
+        maxZoom: 10,
+        minZoom: 0.1,
+        smoothScroll: true,      // Smooth inertial scrolling
+        zoomDoubleClickSpeed: 1, // Disable double-click zoom (we have buttons)
+        bounds: false,           // No boundary constraints — free roaming
+      });
+    }, 50);
   }
 
   // Modal close button
@@ -2375,42 +2455,21 @@ This is a fully client-side application. Your content never leaves your browser 
 
   // Zoom controls
   document.getElementById('mermaid-modal-zoom-in').addEventListener('click', () => {
-    modalZoomScale = Math.min(modalZoomScale + 0.25, 10);
-    applyModalTransform();
+    if (panzoomInstance) {
+      const t = panzoomInstance.getTransform();
+      panzoomInstance.smoothZoom(t.x, t.y, 1.5);
+    }
   });
   document.getElementById('mermaid-modal-zoom-out').addEventListener('click', () => {
-    modalZoomScale = Math.max(modalZoomScale - 0.25, 0.1);
-    applyModalTransform();
+    if (panzoomInstance) {
+      const t = panzoomInstance.getTransform();
+      panzoomInstance.smoothZoom(t.x, t.y, 0.7);
+    }
   });
   document.getElementById('mermaid-modal-zoom-reset').addEventListener('click', () => {
-    modalZoomScale = 1; modalPanX = 0; modalPanY = 0;
-    applyModalTransform();
-  });
-
-  // Mouse-wheel zoom inside modal
-  mermaidModalDiagram.addEventListener('wheel', function(e) {
-    e.preventDefault();
-    const delta = e.deltaY < 0 ? 0.15 : -0.15;
-    modalZoomScale = Math.min(Math.max(modalZoomScale + delta, 0.1), 10);
-    applyModalTransform();
-  }, { passive: false });
-
-  // Drag to pan inside modal
-  mermaidModalDiagram.addEventListener('mousedown', function(e) {
-    modalIsDragging = true;
-    modalDragStart = { x: e.clientX - modalPanX, y: e.clientY - modalPanY };
-    mermaidModalDiagram.classList.add('dragging');
-  });
-  document.addEventListener('mousemove', function(e) {
-    if (!modalIsDragging) return;
-    modalPanX = e.clientX - modalDragStart.x;
-    modalPanY = e.clientY - modalDragStart.y;
-    applyModalTransform();
-  });
-  document.addEventListener('mouseup', function() {
-    if (modalIsDragging) {
-      modalIsDragging = false;
-      mermaidModalDiagram.classList.remove('dragging');
+    if (panzoomInstance) {
+      panzoomInstance.moveTo(0, 0);
+      panzoomInstance.zoomAbs(0, 0, 1);
     }
   });
 
@@ -2519,6 +2578,533 @@ This is a fully client-side application. Your content never leaves your browser 
       toolbar.appendChild(btnPng);
       toolbar.appendChild(btnSvg);
       container.appendChild(toolbar);
+
+      // Double-click on diagram to toggle zoom modal
+      container.addEventListener('dblclick', (e) => {
+        // Don't trigger if clicking on the toolbar buttons
+        if (e.target.closest('.mermaid-toolbar')) return;
+        if (mermaidZoomModal.classList.contains('active')) {
+          closeMermaidModal();
+        } else {
+          openMermaidZoomModal(container);
+        }
+      });
     });
   }
+
+  // ========================================
+  // FOCUS MODE
+  // ========================================
+  const focusModeBtn = document.getElementById("focus-mode-btn");
+  const exitFocusBtn = document.getElementById("exit-focus-btn");
+
+  let isFocusMode = false;
+
+  function toggleFocusMode() {
+    isFocusMode = !isFocusMode;
+    if (isFocusMode) {
+      document.body.classList.add('focus-mode');
+      // Keep current view mode — just hide the chrome (header, tabs, dropzone)
+    } else {
+      document.body.classList.remove('focus-mode');
+    }
+  }
+
+  if (focusModeBtn) focusModeBtn.addEventListener("click", toggleFocusMode);
+  if (exitFocusBtn) exitFocusBtn.addEventListener("click", toggleFocusMode);
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFocusMode) {
+      toggleFocusMode();
+    }
+  });
+
+  // ========================================
+  // 1. PRIVACY NOTICE
+  // ========================================
+  const privacyNotice = document.getElementById('privacy-notice');
+  const privacyDismiss = document.getElementById('privacy-dismiss');
+
+  if (privacyNotice && !localStorage.getItem('kido-privacy-dismissed')) {
+    privacyNotice.style.display = 'block';
+  }
+
+  if (privacyDismiss) {
+    privacyDismiss.addEventListener('click', () => {
+      privacyNotice.classList.add('dismissing');
+      localStorage.setItem('kido-privacy-dismissed', '1');
+      setTimeout(() => { privacyNotice.style.display = 'none'; }, 300);
+    });
+  }
+
+  // ========================================
+  // 2. SEARCH
+  // ========================================
+  const searchBtn = document.getElementById('search-btn');
+  const searchOverlay = document.getElementById('search-overlay');
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+
+  function openSearch() {
+    if (!searchOverlay) return;
+    searchOverlay.style.display = 'flex';
+    setTimeout(() => searchInput.focus(), 50);
+  }
+
+  function closeSearch() {
+    if (!searchOverlay) return;
+    searchOverlay.style.display = 'none';
+    searchInput.value = '';
+    searchResults.innerHTML = '<div class="search-empty">Type to search across all your notes</div>';
+  }
+
+  function performSearch(query) {
+    if (!query || query.length < 2) {
+      searchResults.innerHTML = '<div class="search-empty">Type to search across all your notes</div>';
+      return;
+    }
+    const allTabs = loadTabsFromStorage();
+    const lowerQuery = query.toLowerCase();
+    const matches = allTabs.filter(t =>
+      (t.title && t.title.toLowerCase().includes(lowerQuery)) ||
+      (t.content && t.content.toLowerCase().includes(lowerQuery))
+    );
+
+    if (matches.length === 0) {
+      searchResults.innerHTML = '<div class="search-empty">No results found</div>';
+      return;
+    }
+
+    searchResults.innerHTML = matches.map(t => {
+      const pinnedIcon = t.pinned ? '<i class="bi bi-star-fill pinned-icon"></i>' : '';
+      let snippet = '';
+      if (t.content) {
+        const idx = t.content.toLowerCase().indexOf(lowerQuery);
+        if (idx >= 0) {
+          const start = Math.max(0, idx - 40);
+          const end = Math.min(t.content.length, idx + query.length + 40);
+          const before = t.content.slice(start, idx);
+          const match = t.content.slice(idx, idx + query.length);
+          const after = t.content.slice(idx + query.length, end);
+          snippet = (start > 0 ? '…' : '') + before + '<mark>' + match + '</mark>' + after + (end < t.content.length ? '…' : '');
+        } else {
+          snippet = t.content.slice(0, 80) + (t.content.length > 80 ? '…' : '');
+        }
+      }
+      return '<div class="search-result-item" data-tab-id="' + t.id + '">' +
+        '<div class="search-result-title">' + pinnedIcon + (t.title || 'Untitled') + '</div>' +
+        '<div class="search-result-snippet">' + snippet + '</div></div>';
+    }).join('');
+
+    searchResults.querySelectorAll('.search-result-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const tabId = item.dataset.tabId;
+        const query = searchInput ? searchInput.value.trim() : '';
+        switchTab(tabId);
+        closeSearch();
+
+        // Scroll preview pane to first match after render settles
+        if (query) {
+          setTimeout(() => {
+            const previewPane = document.getElementById('preview-content');
+            if (!previewPane) return;
+            // Find all text nodes and highlight first match
+            const walker = document.createTreeWalker(previewPane, NodeFilter.SHOW_TEXT);
+            const lowerQuery = query.toLowerCase();
+            let node;
+            while ((node = walker.nextNode())) {
+              const idx = node.nodeValue.toLowerCase().indexOf(lowerQuery);
+              if (idx !== -1) {
+                // Wrap match in a temporary highlight span
+                const range = document.createRange();
+                range.setStart(node, idx);
+                range.setEnd(node, idx + query.length);
+                const mark = document.createElement('mark');
+                mark.className = 'search-scroll-highlight';
+                mark.style.cssText = 'background:rgba(168,85,247,0.5);border-radius:2px;color:inherit;';
+                range.surroundContents(mark);
+                mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Remove highlight after 2s
+                setTimeout(() => {
+                  const parent = mark.parentNode;
+                  if (parent) {
+                    parent.replaceChild(document.createTextNode(mark.textContent), mark);
+                    parent.normalize();
+                  }
+                }, 2000);
+                break;
+              }
+            }
+          });
+        }
+      });
+    });
+  }
+
+  if (searchBtn) searchBtn.addEventListener('click', openSearch);
+
+  if (searchOverlay) {
+    searchOverlay.addEventListener('click', (e) => {
+      if (e.target === searchOverlay) closeSearch();
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => performSearch(searchInput.value));
+  }
+
+  // Ctrl/Cmd + K shortcut
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      if (searchOverlay && searchOverlay.style.display === 'flex') {
+        closeSearch();
+      } else {
+        openSearch();
+      }
+    }
+    if (e.key === 'Escape' && searchOverlay && searchOverlay.style.display === 'flex') {
+      closeSearch();
+    }
+  });
+
+  // ========================================
+  // 3. PIN & FAVORITES
+  // ========================================
+  function togglePinTab(tabId) {
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab) return;
+    tab.pinned = !tab.pinned;
+    saveTabsToStorage(tabs);
+    renderTabList();
+  }
+
+  // Sort tabs: pinned first
+  const originalRenderTabList = typeof renderTabList === 'function' ? renderTabList : null;
+  // We'll handle pinned sorting inside renderTabList by sorting the tabs array before rendering
+
+  // ========================================
+  // 4. TAGS
+  // ========================================
+  const tagFilterBtn = document.getElementById('tag-filter-btn');
+  const tagFilterDropdown = document.getElementById('tag-filter-dropdown');
+  const tagFilterList = document.getElementById('tag-filter-list');
+  const tagFilterClear = document.getElementById('tag-filter-clear');
+  let activeTagFilter = null;
+
+  function promptTagTab(tabId) {
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab) return;
+    const currentTags = (tab.tags || []).join(', ');
+    const input = prompt('Enter tags (comma-separated):', currentTags);
+    if (input === null) return; // cancelled
+    tab.tags = input.split(',').map(t => t.trim()).filter(Boolean);
+    saveTabsToStorage(tabs);
+    renderTabList();
+  }
+
+  function getAllTags() {
+    const tagSet = new Set();
+    tabs.forEach(t => { (t.tags || []).forEach(tag => tagSet.add(tag)); });
+    return Array.from(tagSet).sort();
+  }
+
+  function renderTagFilter() {
+    if (!tagFilterList) return;
+    const allTags = getAllTags();
+    if (allTags.length === 0) {
+      tagFilterList.innerHTML = '<div style="padding:8px;color:var(--text-muted);font-size:12px;">No tags yet. Use the tab menu to add tags.</div>';
+      return;
+    }
+    tagFilterList.innerHTML = allTags.map(tag =>
+      '<div class="tag-filter-item' + (activeTagFilter === tag ? ' active' : '') + '" data-tag="' + tag + '">' +
+      '<i class="bi bi-tag"></i> ' + tag + '</div>'
+    ).join('');
+
+    tagFilterList.querySelectorAll('.tag-filter-item').forEach(item => {
+      item.addEventListener('click', () => {
+        activeTagFilter = item.dataset.tag;
+        renderTagFilter();
+        renderTabList();
+        tagFilterDropdown.style.display = 'none';
+      });
+    });
+  }
+
+  if (tagFilterBtn) {
+    tagFilterBtn.addEventListener('click', () => {
+      const isOpen = tagFilterDropdown.style.display !== 'none';
+      tagFilterDropdown.style.display = isOpen ? 'none' : 'block';
+      if (!isOpen) renderTagFilter();
+    });
+  }
+
+  if (tagFilterClear) {
+    tagFilterClear.addEventListener('click', () => {
+      activeTagFilter = null;
+      renderTabList();
+      tagFilterDropdown.style.display = 'none';
+    });
+  }
+
+  // Close tag filter on outside click
+  document.addEventListener('click', (e) => {
+    if (tagFilterDropdown && !e.target.closest('#tag-filter-wrapper')) {
+      tagFilterDropdown.style.display = 'none';
+    }
+  });
+
+  // ========================================
+  // 5. VERSION HISTORY
+  // ========================================
+  const HISTORY_KEY = 'kido-md-history';
+  const historyBtn = document.getElementById('history-btn');
+  const historyPanel = document.getElementById('history-panel');
+  const historyOverlay = document.getElementById('history-overlay');
+  const historyClose = document.getElementById('history-close');
+  const historyListEl = document.getElementById('history-list');
+  const historyDiffView = document.getElementById('history-diff-view');
+  const historyDiffContent = document.getElementById('history-diff-content');
+  const historyDiffTitle = document.getElementById('history-diff-title');
+  const historyBack = document.getElementById('history-back');
+
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function saveHistory(history) {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  }
+
+  function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  /** Called when user shares — saves a snapshot */
+  function saveShareSnapshot(content, title) {
+    const history = loadHistory();
+    const tabSnapshots = history.filter(s => s.tabId === activeTabId);
+    const lastSnapshot = tabSnapshots.length > 0 ? tabSnapshots[tabSnapshots.length - 1] : null;
+    const snapshot = {
+      id: generateId(),
+      tabId: activeTabId,
+      title: title || 'Untitled',
+      content: content,
+      timestamp: Date.now(),
+      parentId: lastSnapshot ? lastSnapshot.id : null
+    };
+    history.push(snapshot);
+    // Keep max 200 snapshots total
+    if (history.length > 200) history.splice(0, history.length - 200);
+    saveHistory(history);
+    return snapshot;
+  }
+
+  function openHistory() {
+    if (!historyPanel) return;
+    const allHistory = loadHistory();
+    // Only show snapshots for the current tab (filter by tabId; fall back to all for old entries)
+    const history = allHistory.filter(s => !s.tabId || s.tabId === activeTabId);
+    historyDiffView.style.display = 'none';
+    historyListEl.style.display = 'block';
+
+    // Show current tab name in panel header
+    const currentTab = tabs.find(t => t.id === activeTabId);
+    const panelTitle = historyPanel.querySelector('h3');
+    if (panelTitle) {
+      panelTitle.innerHTML = '<i class="bi bi-clock-history"></i> ' +
+        (currentTab ? currentTab.title : 'Version') + ' History';
+    }
+
+    if (history.length === 0) {
+      historyListEl.innerHTML = '<div class="history-empty">No history for this note yet.<br>Share it to start tracking versions.</div>';
+    } else {
+      historyListEl.innerHTML = history.slice().reverse().map(s => {
+        const date = new Date(s.timestamp);
+        const timeStr = date.toLocaleString();
+        const parentInfo = s.parentId ? '<span class="has-parent"><i class="bi bi-git"></i> has parent</span>' : '';
+        const chars = s.content ? s.content.length + ' chars' : '';
+        return '<div class="history-item" data-id="' + s.id + '">' +
+          '<div class="history-item-title">' + (s.title || 'Untitled') + '</div>' +
+          '<div class="history-item-meta"><span>' + timeStr + '</span><span>' + chars + '</span>' + parentInfo + '</div></div>';
+      }).join('');
+
+      historyListEl.querySelectorAll('.history-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const snapId = item.dataset.id;
+          showHistoryDiff(snapId);
+        });
+      });
+    }
+
+    historyPanel.style.display = 'flex';
+    historyOverlay.style.display = 'block';
+  }
+
+  function closeHistory() {
+    if (historyPanel) historyPanel.style.display = 'none';
+    if (historyOverlay) historyOverlay.style.display = 'none';
+  }
+
+  function showHistoryDiff(snapId) {
+    const history = loadHistory();
+    const snap = history.find(s => s.id === snapId);
+    if (!snap) return;
+
+    const parent = snap.parentId ? history.find(s => s.id === snap.parentId) : null;
+
+    historyListEl.style.display = 'none';
+    historyDiffView.style.display = 'flex';
+
+    if (!parent) {
+      historyDiffTitle.textContent = 'First version — ' + (snap.title || 'Untitled');
+      historyDiffContent.innerHTML = snap.content.split('\n').map(
+        line => '<div class="diff-line diff-added">+ ' + escapeHtml(line) + '</div>'
+      ).join('');
+      return;
+    }
+
+    historyDiffTitle.textContent = 'Changes from previous version';
+
+    if (typeof Diff !== 'undefined' && Diff.diffLines) {
+      const diff = Diff.diffLines(parent.content || '', snap.content || '');
+      historyDiffContent.innerHTML = diff.map(part => {
+        const lines = part.value.split('\n').filter((l, i, arr) => i < arr.length - 1 || l !== '');
+        const cls = part.added ? 'diff-added' : part.removed ? 'diff-removed' : 'diff-unchanged';
+        const prefix = part.added ? '+ ' : part.removed ? '- ' : '  ';
+        return lines.map(line => '<div class="diff-line ' + cls + '">' + prefix + escapeHtml(line) + '</div>').join('');
+      }).join('');
+    } else {
+      historyDiffContent.innerHTML = '<div class="history-empty">Diff library not loaded</div>';
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  if (historyBtn) historyBtn.addEventListener('click', openHistory);
+  if (historyClose) historyClose.addEventListener('click', closeHistory);
+  if (historyOverlay) historyOverlay.addEventListener('click', closeHistory);
+  if (historyBack) {
+    historyBack.addEventListener('click', () => {
+      historyDiffView.style.display = 'none';
+      historyListEl.style.display = 'block';
+    });
+  }
+
+  // Drag-to-resize history panel
+  const historyResizeHandle = document.getElementById('history-resize-handle');
+  if (historyResizeHandle && historyPanel) {
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    historyResizeHandle.addEventListener('mousedown', (e) => {
+      isResizing = true;
+      startX = e.clientX;
+      startWidth = historyPanel.offsetWidth;
+      historyResizeHandle.classList.add('dragging');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      const dx = startX - e.clientX; // dragging left = wider
+      const newWidth = Math.min(Math.max(startWidth + dx, 280), window.innerWidth * 0.8);
+      historyPanel.style.width = newWidth + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        historyResizeHandle.classList.remove('dragging');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    });
+  }
+
+  // Hook into share: save snapshot on every share
+  const origCopyShareUrl = copyShareUrl;
+  copyShareUrl = function(btn) {
+    const currentTab = tabs.find(t => t.id === activeTabId);
+    const title = currentTab ? currentTab.title : 'Untitled';
+    saveShareSnapshot(markdownEditor.value, title);
+    origCopyShareUrl(btn);
+  };
+
+  // ========================================
+  // 6. BACKUP / RESTORE
+  // ========================================
+  const backupBtn = document.getElementById('backup-btn');
+  const restoreBtn = document.getElementById('restore-btn');
+  const restoreFileInput = document.getElementById('restore-file-input');
+
+  function exportBackup() {
+    const backup = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data: {}
+    };
+    // Collect all kido-md related keys
+    const keysToBackup = [STORAGE_KEY, ACTIVE_TAB_KEY, UNTITLED_COUNTER_KEY, HISTORY_KEY, 'kido-privacy-dismissed'];
+    keysToBackup.forEach(key => {
+      const val = localStorage.getItem(key);
+      if (val !== null) backup.data[key] = val;
+    });
+
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'kido-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importBackup(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const backup = JSON.parse(e.target.result);
+        if (!backup.data || typeof backup.data !== 'object') {
+          alert('Invalid backup file format.');
+          return;
+        }
+        if (!confirm('This will replace all your current notes. Are you sure?')) return;
+
+        Object.entries(backup.data).forEach(([key, value]) => {
+          localStorage.setItem(key, value);
+        });
+
+        alert('Backup restored successfully! The page will reload.');
+        location.reload();
+      } catch (err) {
+        alert('Failed to read backup file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  if (backupBtn) {
+    backupBtn.addEventListener('click', (e) => { e.preventDefault(); exportBackup(); });
+  }
+
+  if (restoreBtn) {
+    restoreBtn.addEventListener('click', (e) => { e.preventDefault(); restoreFileInput.click(); });
+  }
+
+  if (restoreFileInput) {
+    restoreFileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) importBackup(e.target.files[0]);
+      restoreFileInput.value = ''; // reset
+    });
+  }
+
 });

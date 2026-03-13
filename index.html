@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Primary Meta Tags -->
-    <meta name="title" content="Markdown Viewer">
-    <meta name="description" content="Markdown Viewer is a powerful GitHub-style Markdown rendering tool with live preview, LaTeX math, Mermaid diagrams, syntax highlighting, dark mode, and export options to PDF, HTML, and MD—all fully client-side and secure.">
-    <meta name="keywords" content="Markdown Viewer, GitHub-style markdown, live preview, markdown editor, LaTeX support, Mermaid diagrams, PDF export, syntax highlighting, markdown to HTML, secure markdown tool, client-side markdown viewer, ThisIs-Developer, advanced markdown parser, future markdown viewer, next-gen markdown tool">
-    <meta name="author" content="ThisIs-Developer">
+    <meta name="title" content="MD Preview">
+    <meta name="description" content="A premium, glassmorphism-styled Markdown editor with advanced features for professionals.">
+    <meta name="keywords" content="Markdown Viewer, Kido, live preview, glassmorphism, markdown editor, next-gen markdown tool">
+    <meta name="author" content="Kido">
     <meta name="robots" content="index, follow">
     <meta name="language" content="English">
     <meta name="distribution" content="global">
@@ -15,20 +15,23 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://markdownviewer.pages.dev/">
-    <meta property="og:title" content="Markdown Viewer">
-    <meta property="og:description" content="Markdown Viewer is a powerful GitHub-style Markdown rendering tool with live preview, LaTeX math, Mermaid diagrams, syntax highlighting, dark mode, and export options to PDF, HTML, and MD—all fully client-side and secure.">
+    <meta property="og:url" content="https://kido-markdown.vercel.app/">
+    <meta property="og:title" content="MD Preview">
+    <meta property="og:description" content="A premium, glassmorphism-styled Markdown editor with advanced features for professionals.">
     <meta property="og:image" content="https://markdownviewer.pages.dev/assets/icon.jpg">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://markdownviewer.pages.dev/">
-    <meta property="twitter:title" content="Markdown Viewer">
-    <meta property="twitter:description" content="Markdown Viewer is a powerful GitHub-style Markdown rendering tool with live preview, LaTeX math, Mermaid diagrams, syntax highlighting, dark mode, and export options to PDF, HTML, and MD—all fully client-side and secure.">
+    <meta property="twitter:url" content="https://kido-markdown.vercel.app/">
+    <meta property="twitter:title" content="MD Preview">
+    <meta property="twitter:description" content="A premium, glassmorphism-styled Markdown editor with advanced features for professionals.">
     <meta property="twitter:image" content="https://markdownviewer.pages.dev/assets/icon.jpg">
 
-    <title>Markdown Viewer</title>
+    <title>MD Preview - Premium Editor</title>
     <link href="assets/icon.jpg" rel="icon" type="image/jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <!-- Updated libraries to latest versions -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
@@ -54,17 +57,26 @@
  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js" integrity="sha384-rNlaE5fs9dGIjmxWDALQh/RBAaGRYT5ChrzHo6tRfgrZ36iRFAiquP5g41Jsv+0j" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/panzoom@9.4.3/dist/panzoom.min.js"></script>
+<script src="https://unpkg.com/diff@5.2.0/dist/diff.min.js"></script>
 </head>
 <body>
+    <!-- Privacy Notice Banner -->
+    <div id="privacy-notice" class="privacy-notice" style="display:none;">
+        <div class="privacy-notice-content">
+            <i class="bi bi-shield-lock"></i>
+            <span>🔒 <strong>Your data stays on your device.</strong> All notes are stored in your browser's localStorage. We don't collect or store anything on our servers.</span>
+            <button id="privacy-dismiss" class="privacy-dismiss" title="Got it">Got it</button>
+        </div>
+    </div>
+
     <div class="app-container">
         <header class="app-header">
             <div class="container-fluid d-flex justify-content-between align-items-center header-container">
                 <!-- Left section: Logo, GitHub, Stats -->
                 <div class="d-flex align-items-center header-left">
-                    <h1 class="h4 mb-0 me-2">Markdown Viewer</h1>
-                    <a href="https://github.com/ThisIs-Developer/Markdown-Viewer/" class="github-link" title="View on GitHub" target="_blank" rel="noopener noreferrer">
-                        <i class="bi bi-github"></i>
-                    </a>
+                    <h1 class="h4 mb-0 me-2" style="font-weight: 700; background: linear-gradient(90deg, #a855f7, #6366f1); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">MD Preview</h1>
+                    <!-- Removed author's Github link -->
                     <div id="stats-container" class="stats-container d-flex align-items-center d-none d-lg-flex">
                         <div class="stat-item me-3">
                             <i class="bi bi-clock me-1"></i> <span id="reading-time">0</span> Min Read
@@ -92,35 +104,54 @@
                         <i class="bi bi-eye"></i>
                         <span>Preview</span>
                     </button>
+                    <div class="vr mx-2" style="height: 24px;"></div>
+                    <button class="view-mode-btn" id="focus-mode-btn" title="Toggle Focus Mode">
+                        <i class="bi bi-arrows-fullscreen"></i>
+                        <span>Focus</span>
+                    </button>
                 </div>
 
                 <!-- Right section: Toolbar -->
                 <div class="toolbar d-none d-md-flex header-right">
                     <button id="toggle-sync" class="tool-button sync-enabled border-primary" title="Toggle Sync Scrolling">
-                        <i class="bi bi-link"></i> Sync Off
+                        <i class="bi bi-link"></i> <span class="btn-label">Sync Off</span>
                     </button>
                     <button id="import-button" class="tool-button" title="Import Markdown">
-                        <i class="bi bi-upload"></i> Import
+                        <i class="bi bi-upload"></i> <span class="btn-label">Import</span>
                     </button>
                     <input type="file" id="file-input" class="file-input" accept=".md,.markdown,text/markdown">
                     
                     <div class="dropdown">
                         <button class="tool-button dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-download"></i> Export
+                            <i class="bi bi-download"></i> <span class="btn-label">Export</span>
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="exportDropdown">
                             <li><a class="dropdown-item" href="#" id="export-md">Markdown (.md)</a></li>
                             <li><a class="dropdown-item" href="#" id="export-html">HTML</a></li>
                             <li><a class="dropdown-item" href="#" id="export-pdf">PDF</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="export-singlefile"><i class="bi bi-file-zip me-1"></i>Download Single File (.html)</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="backup-btn"><i class="bi bi-cloud-download me-1"></i>Backup All Notes</a></li>
+                            <li><a class="dropdown-item" href="#" id="restore-btn"><i class="bi bi-cloud-upload me-1"></i>Restore from Backup</a></li>
                         </ul>
+                        <input type="file" id="restore-file-input" class="file-input" accept=".json">
                     </div>
                     
                     <button id="copy-markdown-button" class="tool-button" title="Copy Markdown">
-                        <i class="bi bi-clipboard"></i> Copy
+                        <i class="bi bi-clipboard"></i> <span class="btn-label">Copy</span>
                     </button>
                     
                     <button id="share-button" class="tool-button" title="Share via URL">
-                        <i class="bi bi-share"></i> Share
+                        <i class="bi bi-share"></i> <span class="btn-label">Share</span>
+                    </button>
+
+                    <button id="search-btn" class="tool-button" title="Search Notes (Ctrl+K)">
+                        <i class="bi bi-search"></i>
+                    </button>
+
+                    <button id="history-btn" class="tool-button" title="Version History">
+                        <i class="bi bi-clock-history"></i>
                     </button>
                     
                     <button id="theme-toggle" class="tool-button" title="Toggle Dark Mode">
@@ -229,9 +260,21 @@
         <!-- Tab Bar -->
         <div class="tab-bar" id="tab-bar" role="tablist" aria-label="Document tabs">
           <div class="tab-list" id="tab-list"></div>
-          <button class="tab-reset-btn" id="tab-reset-btn" title="Reset all files" aria-label="Reset all files">
-            <i class="bi bi-arrow-counterclockwise"></i> Reset
-          </button>
+          <div class="tab-bar-actions">
+            <div class="tag-filter-wrapper" id="tag-filter-wrapper">
+              <button class="tab-tool-btn" id="tag-filter-btn" title="Filter by tag">
+                <i class="bi bi-tag"></i>
+              </button>
+              <div class="tag-filter-dropdown" id="tag-filter-dropdown" style="display:none;">
+                <div class="tag-filter-header">Filter by Tag</div>
+                <div class="tag-filter-list" id="tag-filter-list"></div>
+                <button class="tag-filter-clear" id="tag-filter-clear">Show All</button>
+              </div>
+            </div>
+            <button class="tab-reset-btn" id="tab-reset-btn" title="Reset all files" aria-label="Reset all files">
+              <i class="bi bi-arrow-counterclockwise"></i> Reset
+            </button>
+          </div>
         </div>
 
         <!-- Reset Confirmation Modal -->
@@ -310,6 +353,44 @@
             </div>
         </div>
     </div>
+
+    <button id="exit-focus-btn" class="exit-focus-btn">
+        <i class="bi bi-arrows-collapse"></i> Exit Focus
+    </button>
+
+    <!-- Search Overlay -->
+    <div id="search-overlay" class="search-overlay" style="display:none;">
+        <div class="search-modal">
+            <div class="search-header">
+                <i class="bi bi-search"></i>
+                <input type="text" id="search-input" class="search-input" placeholder="Search all notes..." autocomplete="off" />
+                <kbd class="search-kbd">ESC</kbd>
+            </div>
+            <div class="search-results" id="search-results">
+                <div class="search-empty">Type to search across all your notes</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Panel (slide-in sidebar) -->
+    <div id="history-panel" class="history-panel" style="display:none;">
+        <div class="history-resize-handle" id="history-resize-handle"></div>
+        <div class="history-panel-header">
+            <h3><i class="bi bi-clock-history"></i> Version History</h3>
+            <button id="history-close" class="history-close" title="Close"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="history-list" id="history-list">
+            <div class="history-empty">No share history yet. Share a note to start tracking versions.</div>
+        </div>
+        <div class="history-diff-view" id="history-diff-view" style="display:none;">
+            <div class="history-diff-header">
+                <button id="history-back" class="history-back"><i class="bi bi-arrow-left"></i> Back</button>
+                <span id="history-diff-title">Comparing versions</span>
+            </div>
+            <div class="history-diff-content" id="history-diff-content"></div>
+        </div>
+    </div>
+    <div id="history-overlay" class="history-overlay" style="display:none;"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     <script src="script.js"></script>

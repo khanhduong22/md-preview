@@ -337,6 +337,105 @@ This is a fully client-side application. Your content never leaves your browser 
     return 'Untitled ' + untitledCounter;
   }
 
+  // ============================================
+  // Tab Groups (Chrome-style)
+  // ============================================
+  const GROUPS_KEY = 'mdPreviewTabGroups';
+  const GROUP_COLORS = [
+    { name: 'gray',   bg: 'rgba(156,163,175,0.25)', border: '#9ca3af', dot: '#9ca3af' },
+    { name: 'blue',   bg: 'rgba(59,130,246,0.2)',  border: '#3b82f6', dot: '#3b82f6' },
+    { name: 'purple', bg: 'rgba(168,85,247,0.2)',  border: '#a855f7', dot: '#a855f7' },
+    { name: 'green',  bg: 'rgba(34,197,94,0.2)',   border: '#22c55e', dot: '#22c55e' },
+    { name: 'yellow', bg: 'rgba(234,179,8,0.25)',  border: '#eab308', dot: '#eab308' },
+    { name: 'orange', bg: 'rgba(249,115,22,0.2)',  border: '#f97316', dot: '#f97316' },
+    { name: 'red',    bg: 'rgba(239,68,68,0.2)',   border: '#ef4444', dot: '#ef4444' },
+    { name: 'pink',   bg: 'rgba(236,72,153,0.2)',  border: '#ec4899', dot: '#ec4899' }
+  ];
+
+  let tabGroups = [];
+
+  function loadGroups() {
+    try { return JSON.parse(localStorage.getItem(GROUPS_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function saveGroups() {
+    localStorage.setItem(GROUPS_KEY, JSON.stringify(tabGroups));
+  }
+
+  function createGroup(name, colorName) {
+    const color = GROUP_COLORS.find(c => c.name === colorName) || GROUP_COLORS[2]; // default purple
+    const group = {
+      id: 'grp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      name: name || 'New Group',
+      color: color.name,
+      collapsed: false
+    };
+    tabGroups.push(group);
+    saveGroups();
+    return group;
+  }
+
+  function deleteGroup(groupId) {
+    // Ungroup all tabs in this group
+    tabs.forEach(t => { if (t.groupId === groupId) t.groupId = null; });
+    tabGroups = tabGroups.filter(g => g.id !== groupId);
+    saveGroups();
+    saveTabsToStorage(tabs);
+    renderTabBar(tabs, activeTabId);
+  }
+
+  function renameGroup(groupId) {
+    const group = tabGroups.find(g => g.id === groupId);
+    if (!group) return;
+    const newName = prompt('Rename group:', group.name);
+    if (newName === null) return;
+    group.name = newName.trim() || 'Unnamed';
+    saveGroups();
+    renderTabBar(tabs, activeTabId);
+  }
+
+  function toggleGroupCollapse(groupId) {
+    const group = tabGroups.find(g => g.id === groupId);
+    if (!group) return;
+    group.collapsed = !group.collapsed;
+    saveGroups();
+    renderTabBar(tabs, activeTabId);
+  }
+
+  function changeGroupColor(groupId, colorName) {
+    const group = tabGroups.find(g => g.id === groupId);
+    if (!group) return;
+    group.color = colorName;
+    saveGroups();
+    renderTabBar(tabs, activeTabId);
+  }
+
+  function addTabToGroup(tabId, groupId) {
+    const tab = tabs.find(t => t.id === tabId);
+    if (tab) {
+      tab.groupId = groupId;
+      saveTabsToStorage(tabs);
+      renderTabBar(tabs, activeTabId);
+    }
+  }
+
+  function removeTabFromGroup(tabId) {
+    const tab = tabs.find(t => t.id === tabId);
+    if (tab) {
+      tab.groupId = null;
+      saveTabsToStorage(tabs);
+      renderTabBar(tabs, activeTabId);
+    }
+  }
+
+  function getGroupColor(colorName) {
+    return GROUP_COLORS.find(c => c.name === colorName) || GROUP_COLORS[0];
+  }
+
+  // Load groups on init
+  tabGroups = loadGroups();
+
   function createTab(content, title, viewMode) {
     if (content === undefined) content = '';
     if (title === undefined) title = null;
@@ -355,9 +454,36 @@ This is a fully client-side application. Your content never leaves your browser 
     const tabList = document.getElementById('tab-list');
     if (!tabList) return;
     tabList.innerHTML = '';
-    tabsArr.forEach(function(tab) {
+
+    // Build group submenu HTML for tab context menus
+    function buildGroupSubmenu(currentTabGroupId) {
+      let html = '<div class="tab-group-submenu">';
+      html += '<button class="tab-menu-item" data-action="new-group"><i class="bi bi-folder-plus"></i> New Group</button>';
+      if (tabGroups.length > 0) {
+        html += '<div class="tab-ctx-divider"></div>';
+        tabGroups.forEach(g => {
+          const gc = getGroupColor(g.color);
+          const check = currentTabGroupId === g.id ? ' ✓' : '';
+          html += '<button class="tab-menu-item" data-action="add-to-group" data-group-id="' + g.id + '">' +
+            '<span class="group-color-dot" style="background:' + gc.dot + '"></span> ' + (g.name || 'Unnamed') + check + '</button>';
+        });
+      }
+      if (currentTabGroupId) {
+        html += '<div class="tab-ctx-divider"></div>';
+        html += '<button class="tab-menu-item" data-action="remove-from-group"><i class="bi bi-folder-minus"></i> Remove from Group</button>';
+      }
+      html += '</div>';
+      return html;
+    }
+
+    // Create a tab DOM element
+    function createTabElement(tab, groupColor) {
       const item = document.createElement('div');
       item.className = 'tab-item' + (tab.id === currentActiveTabId ? ' active' : '');
+      if (groupColor) {
+        item.style.borderBottomColor = groupColor.border;
+        item.classList.add('in-group');
+      }
       item.setAttribute('data-tab-id', tab.id);
       item.setAttribute('role', 'tab');
       item.setAttribute('aria-selected', tab.id === currentActiveTabId ? 'true' : 'false');
@@ -372,35 +498,76 @@ This is a fully client-side application. Your content never leaves your browser 
         renameTab(tab.id);
       });
 
-      // Three-dot menu button
       const menuBtn = document.createElement('button');
       menuBtn.className = 'tab-menu-btn';
       menuBtn.setAttribute('aria-label', 'File options');
       menuBtn.title = 'File options';
       menuBtn.innerHTML = '&#8943;';
 
-      // Dropdown
       const dropdown = document.createElement('div');
       dropdown.className = 'tab-menu-dropdown';
       dropdown.innerHTML =
-        '<button class="tab-menu-item" data-action="pin"><i class="bi bi-pin"></i> <span class="pin-label">Pin</span></button>' +
+        '<button class="tab-menu-item" data-action="pin"><i class="bi bi-pin"></i> <span class="pin-label">' + (tab.pinned ? 'Unpin' : 'Pin') + '</span></button>' +
         '<button class="tab-menu-item" data-action="tag"><i class="bi bi-tag"></i> Tag</button>' +
+        '<button class="tab-menu-item tab-menu-item-has-sub" data-action="group-menu"><i class="bi bi-collection"></i> Group <i class="bi bi-chevron-right" style="font-size:10px;margin-left:auto"></i></button>' +
         '<div class="tab-ctx-divider"></div>' +
         '<button class="tab-menu-item" data-action="rename"><i class="bi bi-pencil"></i> Rename</button>' +
         '<button class="tab-menu-item" data-action="duplicate"><i class="bi bi-files"></i> Duplicate</button>' +
         '<button class="tab-menu-item tab-menu-item-danger" data-action="delete"><i class="bi bi-trash"></i> Delete</button>';
 
+      // Group submenu container
+      const groupSubContainer = document.createElement('div');
+      groupSubContainer.className = 'tab-group-sub-container';
+      groupSubContainer.style.display = 'none';
+      groupSubContainer.innerHTML = buildGroupSubmenu(tab.groupId);
+      dropdown.appendChild(groupSubContainer);
+
       menuBtn.appendChild(dropdown);
+
+      // Show/hide group submenu on hover
+      const groupMenuItem = dropdown.querySelector('[data-action="group-menu"]');
+      if (groupMenuItem) {
+        groupMenuItem.addEventListener('mouseenter', () => {
+          groupSubContainer.style.display = 'block';
+          // Position submenu
+          const rect = groupMenuItem.getBoundingClientRect();
+          groupSubContainer.style.top = (rect.top) + 'px';
+          groupSubContainer.style.left = (rect.left - 8) + 'px';
+        });
+        groupMenuItem.addEventListener('click', (e) => {
+          e.stopPropagation();
+          groupSubContainer.style.display = groupSubContainer.style.display === 'none' ? 'block' : 'none';
+        });
+      }
+      dropdown.addEventListener('mouseleave', () => {
+        groupSubContainer.style.display = 'none';
+      });
+
+      // Group submenu actions
+      groupSubContainer.querySelectorAll('.tab-menu-item').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          menuBtn.classList.remove('open');
+          const action = btn.dataset.action;
+          if (action === 'new-group') {
+            const name = prompt('Group name:');
+            if (name === null) return;
+            const group = createGroup(name, 'purple');
+            addTabToGroup(tab.id, group.id);
+          } else if (action === 'add-to-group') {
+            addTabToGroup(tab.id, btn.dataset.groupId);
+          } else if (action === 'remove-from-group') {
+            removeTabFromGroup(tab.id);
+          }
+        });
+      });
 
       menuBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        // Close all other open dropdowns first
         document.querySelectorAll('.tab-menu-btn.open').forEach(function(btn) {
           if (btn !== menuBtn) btn.classList.remove('open');
         });
         menuBtn.classList.toggle('open');
-        // Position the dropdown relative to the viewport so it escapes the
-        // overflow scroll container on .tab-list
         if (menuBtn.classList.contains('open')) {
           var rect = menuBtn.getBoundingClientRect();
           dropdown.style.top = (rect.bottom + 4) + 'px';
@@ -409,11 +576,12 @@ This is a fully client-side application. Your content never leaves your browser 
         }
       });
 
-      dropdown.querySelectorAll('.tab-menu-item').forEach(function(actionBtn) {
+      dropdown.querySelectorAll(':scope > .tab-menu-item').forEach(function(actionBtn) {
         actionBtn.addEventListener('click', function(e) {
           e.stopPropagation();
+          const action = actionBtn.dataset.action;
+          if (action === 'group-menu') return; // handled separately
           menuBtn.classList.remove('open');
-          const action = actionBtn.dataset.action || actionBtn.getAttribute('data-action');
           if (action === 'rename') renameTab(tab.id);
           else if (action === 'duplicate') duplicateTab(tab.id);
           else if (action === 'delete') deleteTab(tab.id);
@@ -422,53 +590,165 @@ This is a fully client-side application. Your content never leaves your browser 
         });
       });
 
-      // Update pin label
-      const pinLabel = dropdown.querySelector('.pin-label');
-      if (pinLabel && tab.pinned) pinLabel.textContent = 'Unpin';
-
       item.appendChild(titleSpan);
       item.appendChild(menuBtn);
 
-      item.addEventListener('click', function() {
-        switchTab(tab.id);
-      });
+      item.addEventListener('click', function() { switchTab(tab.id); });
 
       item.addEventListener('dragstart', function() {
         draggedTabId = tab.id;
         setTimeout(function() { item.classList.add('dragging'); }, 0);
       });
-
       item.addEventListener('dragend', function() {
         item.classList.remove('dragging');
         draggedTabId = null;
       });
-
       item.addEventListener('dragover', function(e) {
         e.preventDefault();
         item.classList.add('drag-over');
       });
-
       item.addEventListener('dragleave', function() {
         item.classList.remove('drag-over');
       });
-
       item.addEventListener('drop', function(e) {
         e.preventDefault();
         item.classList.remove('drag-over');
         if (!draggedTabId || draggedTabId === tab.id) return;
-        const fromIdx = tabs.findIndex(function(t) { return t.id === draggedTabId; });
-        const toIdx = tabs.findIndex(function(t) { return t.id === tab.id; });
+        const fromIdx = tabs.findIndex(t => t.id === draggedTabId);
+        const toIdx = tabs.findIndex(t => t.id === tab.id);
         if (fromIdx === -1 || toIdx === -1) return;
         const moved = tabs.splice(fromIdx, 1)[0];
+        // If dropping onto a grouped tab, add to that group
+        if (tab.groupId) moved.groupId = tab.groupId;
         tabs.splice(toIdx, 0, moved);
         saveTabsToStorage(tabs);
         renderTabBar(tabs, activeTabId);
       });
 
-      tabList.appendChild(item);
+      return item;
+    }
+
+    // Create group header element
+    function createGroupHeader(group) {
+      const gc = getGroupColor(group.color);
+      const header = document.createElement('div');
+      header.className = 'tab-group-header' + (group.collapsed ? ' collapsed' : '');
+      header.style.setProperty('--group-color', gc.border);
+      header.style.setProperty('--group-bg', gc.bg);
+      header.setAttribute('data-group-id', group.id);
+
+      header.innerHTML =
+        '<span class="group-color-dot" style="background:' + gc.dot + '"></span>' +
+        '<span class="group-header-name">' + (group.name || 'Unnamed') + '</span>' +
+        '<span class="group-collapse-icon"><i class="bi bi-chevron-' + (group.collapsed ? 'right' : 'down') + '"></i></span>';
+
+      // Click to collapse/expand
+      header.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleGroupCollapse(group.id);
+      });
+
+      // Double-click to rename
+      header.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        renameGroup(group.id);
+      });
+
+      // Right-click context menu for group
+      header.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Remove existing group context menus
+        document.querySelectorAll('.group-context-menu').forEach(m => m.remove());
+        const menu = document.createElement('div');
+        menu.className = 'group-context-menu';
+        menu.innerHTML =
+          '<button data-action="rename"><i class="bi bi-pencil"></i> Rename</button>' +
+          '<div class="tab-ctx-divider"></div>' +
+          '<div class="group-color-picker">' +
+            GROUP_COLORS.map(c => '<span class="group-color-option' + (c.name === group.color ? ' active' : '') + '" data-color="' + c.name + '" style="background:' + c.dot + '"></span>').join('') +
+          '</div>' +
+          '<div class="tab-ctx-divider"></div>' +
+          '<button class="tab-menu-item-danger" data-action="ungroup"><i class="bi bi-folder-minus"></i> Ungroup All</button>' +
+          '<button class="tab-menu-item-danger" data-action="delete-group"><i class="bi bi-trash"></i> Delete Group</button>';
+
+        menu.style.position = 'fixed';
+        menu.style.top = e.clientY + 'px';
+        menu.style.left = e.clientX + 'px';
+        document.body.appendChild(menu);
+
+        menu.querySelectorAll('button').forEach(btn => {
+          btn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            menu.remove();
+            const act = btn.dataset.action;
+            if (act === 'rename') renameGroup(group.id);
+            else if (act === 'ungroup') deleteGroup(group.id);
+            else if (act === 'delete-group') {
+              // Delete group AND close its tabs
+              const groupTabs = tabs.filter(t => t.groupId === group.id);
+              groupTabs.forEach(t => deleteTab(t.id));
+              tabGroups = tabGroups.filter(g => g.id !== group.id);
+              saveGroups();
+              renderTabBar(tabs, activeTabId);
+            }
+          });
+        });
+
+        menu.querySelectorAll('.group-color-option').forEach(opt => {
+          opt.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            menu.remove();
+            changeGroupColor(group.id, opt.dataset.color);
+          });
+        });
+
+        // Close on click outside
+        const closeMenu = () => { menu.remove(); document.removeEventListener('click', closeMenu); };
+        setTimeout(() => document.addEventListener('click', closeMenu), 0);
+      });
+
+      // Drop onto group header = add to group
+      header.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        header.classList.add('drag-over');
+      });
+      header.addEventListener('dragleave', () => {
+        header.classList.remove('drag-over');
+      });
+      header.addEventListener('drop', (e) => {
+        e.preventDefault();
+        header.classList.remove('drag-over');
+        if (draggedTabId) {
+          addTabToGroup(draggedTabId, group.id);
+        }
+      });
+
+      return header;
+    }
+
+    // Render: groups first, then ungrouped tabs
+    tabGroups.forEach(group => {
+      const groupTabs = tabsArr.filter(t => t.groupId === group.id);
+      if (groupTabs.length === 0) return; // skip empty groups
+
+      const gc = getGroupColor(group.color);
+      tabList.appendChild(createGroupHeader(group));
+
+      if (!group.collapsed) {
+        groupTabs.forEach(tab => {
+          tabList.appendChild(createTabElement(tab, gc));
+        });
+      }
     });
 
-    // "+ Create" button at end of tab list
+    // Ungrouped tabs
+    const ungroupedTabs = tabsArr.filter(t => !t.groupId || !tabGroups.some(g => g.id === t.groupId));
+    ungroupedTabs.forEach(tab => {
+      tabList.appendChild(createTabElement(tab, null));
+    });
+
+    // "+" button
     const newBtn = document.createElement('button');
     newBtn.className = 'tab-new-btn';
     newBtn.title = 'New Tab (Ctrl+T)';
@@ -700,6 +980,7 @@ This is a fully client-side application. Your content never leaves your browser 
     saveCurrentTabState();
     const dupTitle = tab.title + ' (copy)';
     const dup = createTab(tab.content, dupTitle, tab.viewMode);
+    if (tab.groupId) dup.groupId = tab.groupId;
     const idx = tabs.findIndex(function(t) { return t.id === tabId; });
     tabs.splice(idx + 1, 0, dup);
     switchTab(dup.id);

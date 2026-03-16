@@ -26,6 +26,15 @@ MD Preview là personal Markdown note assistant hoạt động hoàn toàn clien
 - Hiện snippet với keyword được highlight
 - Click kết quả → switch tab + scroll preview đến đúng vị trí match (highlight tím 2s rồi tự fade)
 
+### 📁 Tab Groups (Chrome-style)
+- Menu 3 chấm → **Group** → tạo group mới hoặc gán vào group có sẵn
+- 8 preset colors: gray, blue, purple, green, yellow, orange, red, pink
+- Click group header → collapse/expand
+- Double-click group header → rename
+- Right-click group header → đổi màu, ungroup all, xoá group
+- Drag tab lên group header → tự gán vào group
+- Duplicate tab → giữ nguyên group
+
 ### 📌 Pin & Tags
 - Pin tab: nổi lên đầu danh sách, có indicator tím
 - Tag tab: gán nhiều tag qua menu 3 chấm
@@ -64,9 +73,10 @@ MD Preview là personal Markdown note assistant hoạt động hoàn toàn clien
 
 | Key | Nội dung |
 |-----|----------|
-| `markdownViewerTabs` | Array các tab (id, title, content, viewMode, scrollPos, tags, pinned) |
+| `markdownViewerTabs` | Array các tab (id, title, content, viewMode, scrollPos, tags, pinned, groupId) |
 | `markdownViewerActiveTab` | ID tab đang active |
 | `markdownViewerUntitledCounter` | Counter đặt tên tab mới |
+| `mdPreviewTabGroups` | Array tab groups (id, name, color, collapsed) |
 | `mdPreviewHistory` | Array snapshots version history (id, tabId, title, content, timestamp, parentId) |
 | `mdPreviewPrivacyDismissed` | Flag đã đọc privacy notice |
 

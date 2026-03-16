@@ -1571,6 +1571,143 @@ a:focus {
 }
 
 /* ========================================
+   TAB GROUPS (Chrome-style)
+   ======================================== */
+
+.tab-group-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--group-color, var(--accent-color));
+  background: var(--group-bg, rgba(168,85,247,0.15));
+  border: 1px solid var(--group-color, var(--accent-color));
+  border-bottom: 2px solid var(--group-color, var(--accent-color));
+  flex-shrink: 0;
+  margin-right: 0;
+  white-space: nowrap;
+  user-select: none;
+  transition: opacity 0.15s;
+}
+
+.tab-group-header:hover { opacity: 0.85; }
+.tab-group-header.collapsed { opacity: 0.6; margin-right: 4px; }
+.tab-group-header.drag-over { box-shadow: 0 0 0 2px var(--group-color); }
+
+.group-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.group-header-name {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.group-collapse-icon {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.tab-item.in-group {
+  border-bottom: 2px solid;
+}
+
+/* Group submenu (inside tab dropdown) */
+.tab-menu-item-has-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab-group-sub-container {
+  position: fixed;
+  z-index: 10002;
+  background: var(--card-bg, #1a1a2e);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 4px 0;
+  min-width: 160px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.tab-group-sub-container .tab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 14px;
+  border: none;
+  background: none;
+  color: var(--text-color);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tab-group-sub-container .tab-menu-item:hover {
+  background: var(--button-hover);
+}
+
+/* Group right-click context menu */
+.group-context-menu {
+  position: fixed;
+  z-index: 10003;
+  background: var(--card-bg, #1a1a2e);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px 0;
+  min-width: 180px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+
+.group-context-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 14px;
+  border: none;
+  background: none;
+  color: var(--text-color);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.group-context-menu button:hover {
+  background: var(--button-hover);
+}
+
+.group-color-picker {
+  display: flex;
+  gap: 6px;
+  padding: 6px 14px;
+  flex-wrap: wrap;
+}
+
+.group-color-option {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.1s, border-color 0.15s;
+}
+
+.group-color-option:hover { transform: scale(1.2); }
+.group-color-option.active { border-color: #fff; }
+
+/* ========================================
    RESET BUTTON
    ======================================== */
 

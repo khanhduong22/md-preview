@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // View Mode Elements - Story 1.1
   const contentContainer = document.querySelector(".content-container");
-  const viewModeButtons = document.querySelectorAll(".view-mode-btn");
+  const viewModeButtons = document.querySelectorAll(".view-mode-btn:not(.focus-mode-toggle-btn)");
 
   // Mobile View Mode Elements - Story 1.4
   const mobileViewModeButtons = document.querySelectorAll(".mobile-view-mode-btn");
@@ -1247,6 +1247,7 @@ This is a fully client-side application. Your content never leaves your browser 
 
   // View Mode Functions - Story 1.1 & 1.2
   function setViewMode(mode) {
+    if (!mode || !['editor', 'split', 'preview'].includes(mode)) return;
     if (mode === currentViewMode) return;
 
     const previousMode = currentViewMode;

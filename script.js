@@ -2875,7 +2875,7 @@ This is a fully client-side application. Your content never leaves your browser 
   }
 
   // ========================================
-  // FOCUS MODE
+  // HIDE HEADER MODE
   // ========================================
   const focusModeBtn = document.getElementById("focus-mode-btn");
   const exitFocusBtn = document.getElementById("exit-focus-btn");
@@ -2886,7 +2886,6 @@ This is a fully client-side application. Your content never leaves your browser 
     isFocusMode = !isFocusMode;
     if (isFocusMode) {
       document.body.classList.add('focus-mode');
-      // Keep current view mode — just hide the chrome (header, tabs, dropzone)
     } else {
       document.body.classList.remove('focus-mode');
     }

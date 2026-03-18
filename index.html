@@ -105,9 +105,9 @@
                         <span>Preview</span>
                     </button>
                     <div class="vr mx-2" style="height: 24px;"></div>
-                    <button class="view-mode-btn focus-mode-toggle-btn" id="focus-mode-btn" title="Toggle Focus Mode">
-                        <i class="bi bi-arrows-fullscreen"></i>
-                        <span>Focus</span>
+                    <button class="view-mode-btn focus-mode-toggle-btn" id="focus-mode-btn" title="Hide Header">
+                        <i class="bi bi-chevron-up"></i>
+                        <span>Hide</span>
                     </button>
                 </div>
 
@@ -354,9 +354,11 @@
         </div>
     </div>
 
-    <button id="exit-focus-btn" class="exit-focus-btn">
-        <i class="bi bi-arrows-collapse"></i> Exit Focus
-    </button>
+    <div id="header-reveal-zone" class="header-reveal-zone">
+        <button id="exit-focus-btn" class="header-reveal-btn">
+            <i class="bi bi-chevron-down"></i> Show Header
+        </button>
+    </div>
 
     <!-- Search Overlay -->
     <div id="search-overlay" class="search-overlay" style="display:none;">

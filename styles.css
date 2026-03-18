@@ -140,7 +140,7 @@ body {
 }
 
 /* ========================================
-   FOCUS MODE STYLES
+   HIDE HEADER MODE STYLES
    ======================================== */
 body.focus-mode .app-header {
   display: none !important;
@@ -154,43 +154,65 @@ body.focus-mode .dropzone {
   display: none !important;
 }
 
-body.focus-mode .resize-divider {
-  display: none !important;
+/* Invisible hover trigger zone at the very top of the page */
+.header-reveal-zone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  z-index: 1100;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  transition: height 0.2s ease;
 }
 
+body.focus-mode .header-reveal-zone {
+  display: flex;
+}
 
+/* Expand the trigger zone when hovered for easier interaction */
+.header-reveal-zone:hover {
+  height: 48px;
+  background: linear-gradient(to bottom, var(--header-bg), transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
 
-/* Floating exit button for Focus Mode */
-.exit-focus-btn {
-  display: none;
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
+/* The reveal button — hidden by default, shown on zone hover */
+.header-reveal-btn {
+  opacity: 0;
+  transform: translateY(-100%);
+  pointer-events: none;
   background-color: var(--header-bg);
   color: var(--text-color);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 10px 15px;
+  border-radius: 0 0 8px 8px;
+  padding: 4px 16px;
   cursor: pointer;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  transition: all 0.2s ease;
-  font-family: var(--font-primary);
-  font-size: 14px;
-}
-
-body.focus-mode .exit-focus-btn {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.25s ease;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  white-space: nowrap;
+  border-top: none;
 }
 
-.exit-focus-btn:hover {
+.header-reveal-zone:hover .header-reveal-btn {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.header-reveal-btn:hover {
   background-color: var(--button-hover);
   border-color: var(--accent-color);
-  transform: translateY(-2px);
 }
 
 

@@ -127,28 +127,67 @@ document.addEventListener("DOMContentLoaded", function () {
   const originalMarkedParse = marked.parse;
   marked.parse = function(mdString, options) {
     try {
-      const tokens = marked.lexer(mdString, options);
+      let lines = mdString.split('\n');
+      let newLines = [];
+      let inMermaid = false;
+      let inCodeBlock = false;
       
-      // Recursive function to process tokens and their children (e.g. inside list items or blockquotes)
-      function processTokens(tks) {
-        if (!tks) return;
-        tks.forEach(token => {
-          if (token.type === 'paragraph') {
-            const text = token.text.trim();
-            const isMermaid = /^(flowchart|sequenceDiagram|classDiagram|stateDiagram|stateDiagram-v2|erDiagram|journey|gantt|pie|gitGraph|mindmap|timeline|graph)\b/i.test(text);
-            if (isMermaid) {
-              token.type = 'code';
-              token.lang = 'mermaid';
-            }
+      const mermaidStart = /^(flowchart|sequenceDiagram|classDiagram|stateDiagram|stateDiagram-v2|erDiagram|journey|gantt|pie|gitGraph|mindmap|timeline|graph)\b/i;
+      
+      const looksLikeMermaid = (l) => {
+        const t = l.trim();
+        if (!t) return true;
+        if (/^[ \t]/.test(l)) return true; // indented
+        if (/^(subgraph|end|click|style|class|classDef|linkStyle|direction|note|participant|actor|activate|deactivate)\b/i.test(t)) return true;
+        if (/[-\=]+\>/.test(t) || t.includes('---') || t.includes('===')) return true;
+        if (/\[.*\]|\(.*\)|{.*}|>.*\]/.test(t)) return true;
+        if (t.includes(':')) return true;
+        if (/^[A-Za-z0-9_]+$/.test(t)) return true;
+        return false;
+      };
+
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        
+        if (line.trim().startsWith('\`\`\`')) {
+          inCodeBlock = !inCodeBlock;
+          newLines.push(line);
+          continue;
+        }
+        
+        if (!inCodeBlock && !inMermaid && mermaidStart.test(line.trim())) {
+          inMermaid = true;
+          newLines.push('\`\`\`mermaid');
+          newLines.push(line);
+          continue;
+        }
+        
+        if (inMermaid) {
+          if (/^(#{1,6}\s|\-\-\-|> \s|\*\s|\-\s|\d+\.\s)/.test(line)) {
+            newLines.push('\`\`\`');
+            inMermaid = false;
+            newLines.push(line);
+            continue;
           }
-          if (token.tokens) {
-            processTokens(token.tokens);
+          
+          if (i > 0 && lines[i-1].trim() === '' && line.trim() !== '') {
+             if (!looksLikeMermaid(line)) {
+               newLines.push('\`\`\`');
+               inMermaid = false;
+               newLines.push(line);
+               continue;
+             }
           }
-        });
+        }
+        
+        newLines.push(line);
       }
       
-      processTokens(tokens);
-      return marked.parser(tokens, options);
+      if (inMermaid) {
+        newLines.push('\`\`\`');
+      }
+      
+      return originalMarkedParse(newLines.join('\n'), options);
     } catch (e) {
       console.warn("Markdown parsing error, fallback to original parser:", e);
       return originalMarkedParse(mdString, options);

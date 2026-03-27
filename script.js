@@ -123,6 +123,38 @@ document.addEventListener("DOMContentLoaded", function () {
     renderer: renderer,
   });
 
+  // Auto-detect raw Mermaid syntax pasted without code blocks
+  const originalMarkedParse = marked.parse;
+  marked.parse = function(mdString, options) {
+    try {
+      const tokens = marked.lexer(mdString, options);
+      
+      // Recursive function to process tokens and their children (e.g. inside list items or blockquotes)
+      function processTokens(tks) {
+        if (!tks) return;
+        tks.forEach(token => {
+          if (token.type === 'paragraph') {
+            const text = token.text.trim();
+            const isMermaid = /^(flowchart|sequenceDiagram|classDiagram|stateDiagram|stateDiagram-v2|erDiagram|journey|gantt|pie|gitGraph|mindmap|timeline|graph)\b/i.test(text);
+            if (isMermaid) {
+              token.type = 'code';
+              token.lang = 'mermaid';
+            }
+          }
+          if (token.tokens) {
+            processTokens(token.tokens);
+          }
+        });
+      }
+      
+      processTokens(tokens);
+      return marked.parser(tokens, options);
+    } catch (e) {
+      console.warn("Markdown parsing error, fallback to original parser:", e);
+      return originalMarkedParse(mdString, options);
+    }
+  };
+
   const sampleMarkdown = `# Welcome to Markdown Viewer
 
 ## ✨ Key Features

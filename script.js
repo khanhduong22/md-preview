@@ -108,7 +108,14 @@ document.addEventListener("DOMContentLoaded", function () {
   renderer.code = function (code, language) {
     if (language === 'mermaid') {
       const uniqueId = 'mermaid-diagram-' + Math.random().toString(36).substr(2, 9);
-      return `<div class="mermaid-container"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
+      
+      // Workaround for Mermaid v11+ "Unsupported markdown: list" error in flowcharts
+      // Replace spaces after list-like markers with non-breaking spaces
+      const fixedCode = code
+        .replace(/(\b\d+\.)\s+/g, '$1&nbsp;')
+        .replace(/(^|[\[\(|]\s*)([-*+])\s+/g, '$1$2&nbsp;');
+        
+      return `<div class="mermaid-container"><div class="mermaid" id="${uniqueId}">${fixedCode}</div></div>`;
     }
     
     const validLanguage = hljs.getLanguage(language) ? language : "plaintext";

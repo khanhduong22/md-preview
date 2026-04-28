@@ -139,13 +139,13 @@ document.addEventListener("DOMContentLoaded", function () {
       let inMermaid = false;
       let inCodeBlock = false;
       
-      const mermaidStart = /^(flowchart|sequenceDiagram|classDiagram|stateDiagram|stateDiagram-v2|erDiagram|journey|gantt|pie|gitGraph|mindmap|timeline|graph)\b/i;
+      const mermaidStart = /^(flowchart|sequenceDiagram|classDiagram|stateDiagram|stateDiagram-v2|erDiagram|journey|gantt|pie|gitGraph|mindmap|timeline|graph|architecture-beta|architecture|sankey-beta|xychart-beta|block-beta|packet-beta)\b/i;
       
       const looksLikeMermaid = (l) => {
         const t = l.trim();
         if (!t) return true;
         if (/^[ \t]/.test(l)) return true; // indented
-        if (/^(subgraph|end|click|style|class|classDef|linkStyle|direction|note|participant|actor|activate|deactivate)\b/i.test(t)) return true;
+        if (/^(subgraph|end|click|style|class|classDef|linkStyle|direction|note|participant|actor|activate|deactivate|group|service)\b/i.test(t)) return true;
         if (/[-\=]+\>/.test(t) || t.includes('---') || t.includes('===')) return true;
         if (/\[.*\]|\(.*\)|{.*}|>.*\]/.test(t)) return true;
         if (t.includes(':')) return true;

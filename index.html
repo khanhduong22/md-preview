@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Primary Meta Tags -->
-    <meta name="title" content="MD Preview">
+    <meta name="title" content="2ndBrain">
     <meta name="description" content="A premium, glassmorphism-styled Markdown editor with advanced features for professionals.">
-    <meta name="keywords" content="Markdown Viewer, Kido, live preview, glassmorphism, markdown editor, next-gen markdown tool">
+    <meta name="keywords" content="2ndBrain, Markdown Viewer, Kido, live preview, glassmorphism, markdown editor, next-gen markdown tool">
     <meta name="author" content="Kido">
     <meta name="robots" content="index, follow">
     <meta name="language" content="English">
@@ -16,18 +16,18 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://kido-markdown.vercel.app/">
-    <meta property="og:title" content="MD Preview">
+    <meta property="og:title" content="2ndBrain">
     <meta property="og:description" content="A premium, glassmorphism-styled Markdown editor with advanced features for professionals.">
     <meta property="og:image" content="https://markdownviewer.pages.dev/assets/icon.jpg">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://kido-markdown.vercel.app/">
-    <meta property="twitter:title" content="MD Preview">
+    <meta property="twitter:title" content="2ndBrain">
     <meta property="twitter:description" content="A premium, glassmorphism-styled Markdown editor with advanced features for professionals.">
     <meta property="twitter:image" content="https://markdownviewer.pages.dev/assets/icon.jpg">
 
-    <title>MD Preview - Premium Editor</title>
+    <title>2ndBrain - Premium Editor</title>
     <link href="assets/icon.jpg" rel="icon" type="image/jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,6 +59,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js" integrity="sha384-rNlaE5fs9dGIjmxWDALQh/RBAaGRYT5ChrzHo6tRfgrZ36iRFAiquP5g41Jsv+0j" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/panzoom@9.4.3/dist/panzoom.min.js"></script>
 <script src="https://unpkg.com/diff@5.2.0/dist/diff.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/minisearch@6.3.0/dist/umd/index.min.js"></script>
 </head>
 <body>
     <!-- Privacy Notice Banner -->
@@ -75,7 +77,7 @@
             <div class="container-fluid d-flex justify-content-between align-items-center header-container">
                 <!-- Left section: Logo, GitHub, Stats -->
                 <div class="d-flex align-items-center header-left">
-                    <h1 class="h4 mb-0 me-2" style="font-weight: 700; background: linear-gradient(90deg, #a855f7, #6366f1); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">MD Preview</h1>
+                    <h1 class="h4 mb-0 me-2" style="font-weight: 700; background: linear-gradient(90deg, #a855f7, #6366f1); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">2ndBrain</h1>
                     <!-- Removed author's Github link -->
                     <div id="stats-container" class="stats-container d-flex align-items-center d-none d-lg-flex">
                         <div class="stat-item me-3">
@@ -257,7 +259,37 @@
             </div>
         </header>
 
-        <!-- Tab Bar -->
+        <div class="app-body">
+            <!-- Sidebar Explorer -->
+            <aside id="sidebar-explorer" class="sidebar-explorer">
+                <div class="sidebar-header">
+                    <span class="sidebar-title">Explorer</span>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                        <button id="root-new-folder-btn" class="tool-button vault-action-btn" title="New Root Folder" style="display: none; padding: 4px 8px;">
+                            <i class="bi bi-folder-plus"></i>
+                        </button>
+                        <button id="root-new-file-btn" class="tool-button vault-action-btn" title="New Root File" style="display: none; padding: 4px 8px;">
+                            <i class="bi bi-file-earmark-plus"></i>
+                        </button>
+                        <div style="width: 1px; height: 16px; background: var(--border-color); margin: 0 4px;" class="vault-action-divider" style="display: none;"></div>
+                        <button id="sync-vault-btn" class="tool-button" title="Sync Virtual Notes to Vault" style="display: none; padding: 4px 8px;">
+                            <i class="bi bi-cloud-arrow-down"></i>
+                        </button>
+                        <button id="open-vault-btn" class="tool-button" title="Open Local Folder" style="padding: 4px 8px;">
+                            <i class="bi bi-folder2-open"></i> Vault
+                        </button>
+                    </div>
+                </div>
+                <div id="file-tree" class="file-tree">
+                    <div class="empty-vault-message">
+                        Open a local folder to browse your markdown files.
+                    </div>
+                </div>
+            </aside>
+            <div id="sidebar-resizer" class="sidebar-resizer"></div>
+            
+            <main class="main-content">
+                <!-- Tab Bar -->
         <div class="tab-bar" id="tab-bar" role="tablist" aria-label="Document tabs">
           <div class="tab-list" id="tab-list"></div>
           <div class="tab-bar-actions">
@@ -318,6 +350,8 @@
             <div class="preview-pane">
                 <div id="markdown-preview" class="markdown-body"></div>
             </div>
+        </div>
+        </main>
         </div>
     </div>
 

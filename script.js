@@ -371,42 +371,468 @@ This is a fully client-side application. Your content never leaves your browser 
   const STORAGE_KEY = 'markdownViewerTabs';
   const ACTIVE_TAB_KEY = 'markdownViewerActiveTab';
   const UNTITLED_COUNTER_KEY = 'markdownViewerUntitledCounter';
+  const VAULT_HANDLE_KEY = 'kido-vault-handle';
   let tabs = [];
   let activeTabId = null;
   let draggedTabId = null;
   let saveTabStateTimeout = null;
   let untitledCounter = 0;
 
-  function loadTabsFromStorage() {
+  // Vault variables
+  let localVaultMode = false;
+  let vaultDirHandle = null;
+  let vaultMiniSearch = null;
+  let vaultEntries = [];
+  let expandedVaultPaths = new Set();
+
+  async function doVaultRename(entry, newName, fallbackCb) {
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      if (entry.handle.kind === 'directory') {
+         const destDirHandle = await entry.parentDir.getDirectoryHandle(newName, { create: true });
+         async function copyDir(srcDir, destDir) {
+            for await (const [name, handle] of srcDir.entries()) {
+              if (handle.kind === 'file') {
+                const file = await handle.getFile();
+                const destFile = await destDir.getFileHandle(name, { create: true });
+                const writable = await destFile.createWritable();
+                await writable.write(await file.arrayBuffer());
+                await writable.close();
+              } else if (handle.kind === 'directory') {
+                const subDestDir = await destDir.getDirectoryHandle(name, { create: true });
+                await copyDir(handle, subDestDir);
+              }
+            }
+         }
+         await copyDir(entry.handle, destDirHandle);
+         await entry.parentDir.removeEntry(entry.name, { recursive: true });
+         
+         let group = tabGroups.find(g => g.name === entry.name);
+         if (group) { 
+           group.name = newName; 
+           renderTabBar(tabs, activeTabId); 
+           if(typeof saveTabGroups === 'function') saveTabGroups(); 
+         }
+      } else {
+         if (!newName.endsWith('.md')) newName += '.md';
+         const file = await entry.handle.getFile();
+         const text = await file.text();
+         const newHandle = await entry.parentDir.getFileHandle(newName, { create: true });
+         const writable = await newHandle.createWritable();
+         await writable.write(text);
+         await writable.close();
+         await entry.parentDir.removeEntry(entry.name);
+         
+         // Fix active tab logic
+         if (activeTabId === entry.path) {
+           const parentPath = entry.path.substring(0, entry.path.lastIndexOf('/'));
+           activeTabId = parentPath + '/' + newName;
+         }
+         
+         // Update loaded tabs
+         let tab = tabs.find(t => t.id === entry.path);
+         if (tab) {
+           const parentPath = entry.path.substring(0, entry.path.lastIndexOf('/'));
+           tab.id = parentPath + '/' + newName;
+           tab.title = newName;
+           tab.handle = newHandle;
+         }
+      }
+      await renderVaultTree();
+    } catch (err) {
+      alert('Rename failed: ' + err.message);
+      if (fallbackCb) fallbackCb();
+    }
+  }
+
+  function startInlineRename(element, originalName, onComplete) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = originalName;
+    input.className = 'inline-rename-input';
+    
+    let isFinished = false;
+    const finish = (val) => {
+      if (isFinished) return;
+      isFinished = true;
+      onComplete(val);
+    };
+
+    input.onblur = () => finish(input.value.trim());
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter') finish(input.value.trim());
+      if (e.key === 'Escape') finish(originalName);
+    };
+
+    element.replaceWith(input);
+    input.focus();
+    input.select();
+  }
+
+  async function openLocalVault() {
+    try {
+      vaultDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      await localforage.setItem(VAULT_HANDLE_KEY, vaultDirHandle);
+      await initVault(vaultDirHandle);
+    } catch (e) {
+      // User cancelled
+    }
+  }
+
+  async function initVault(handle) {
+    if (!handle) return;
+    vaultDirHandle = handle;
+    localVaultMode = true;
+    document.querySelector('.empty-vault-message').style.display = 'none';
+
+    if (await vaultDirHandle.queryPermission({ mode: 'readwrite' }) !== 'granted') {
+      const btn = document.createElement('button');
+      btn.className = 'tool-button';
+      btn.style.margin = '10px';
+      btn.innerText = 'Re-authorize Vault Access';
+      btn.onclick = async () => {
+        if (await vaultDirHandle.requestPermission({ mode: 'readwrite' }) === 'granted') {
+          await renderVaultTree();
+        }
+      };
+      const tree = document.getElementById('file-tree');
+      tree.innerHTML = '';
+      tree.appendChild(btn);
+      return;
+    }
+    
+    // Clear virtual tabs completely to focus on Vault
+    tabs = [];
+    activeTabId = null;
+    markdownEditor.value = '';
+    renderTabBar(tabs, activeTabId);
+    
+    document.getElementById('root-new-folder-btn').style.display = 'inline-flex';
+    document.getElementById('root-new-file-btn').style.display = 'inline-flex';
+    if(document.querySelector('.vault-action-divider')) document.querySelector('.vault-action-divider').style.display = 'block';
+
+    const handleRootNewFile = async () => {
+      try {
+        let name = prompt('New Markdown File Name at Root:');
+        if (name) {
+          if (!name.endsWith('.md')) name += '.md';
+          await vaultDirHandle.getFileHandle(name, { create: true });
+          await renderVaultTree();
+        }
+      } catch (e) { alert('Error: ' + e.message); }
+    };
+
+    const handleRootNewFolder = async () => {
+      try {
+        let name = prompt('New Folder Name at Root:');
+        if (name) {
+          await vaultDirHandle.getDirectoryHandle(name, { create: true });
+          await renderVaultTree();
+        }
+      } catch (e) { alert('Error: ' + e.message); }
+    };
+    
+    // Unbind and rebind
+    const fileBtn = document.getElementById('root-new-file-btn');
+    const folderBtn = document.getElementById('root-new-folder-btn');
+    fileBtn.replaceWith(fileBtn.cloneNode(true));
+    folderBtn.replaceWith(folderBtn.cloneNode(true));
+    document.getElementById('root-new-file-btn').addEventListener('click', handleRootNewFile);
+    document.getElementById('root-new-folder-btn').addEventListener('click', handleRootNewFolder);
+
+    await renderVaultTree();
+  }
+
+  async function openVaultFile(entry) {
+    let tab = tabs.find(t => t.id === entry.path);
+    if (!tab) {
+      tab = createTab('', entry.name);
+      tab.id = entry.path; // force path as ID
+      tab.handle = entry.handle;
+      
+      const segments = entry.path.split('/').filter(Boolean);
+      if (segments.length > 1) {
+        const folderName = segments[segments.length - 2];
+        let group = tabGroups.find(g => g.name === folderName);
+        if (!group) {
+          group = createGroup(folderName, GROUP_COLORS[Math.floor(Math.random() * GROUP_COLORS.length)].name);
+        }
+        tab.groupId = group.id;
+      }
+
+      tabs.push(tab);
+    }
+    await switchTab(tab.id);
+  }
+
+  async function renderVaultTree() {
+    const treeEl = document.getElementById('file-tree');
+    treeEl.innerHTML = '';
+    
+    // Prepare MiniSearch
+    if (window.MiniSearch) {
+      vaultMiniSearch = new window.MiniSearch({
+        fields: ['title', 'content'], 
+        storeFields: ['title', 'content', 'path']
+      });
+    }
+
+    const buildTree = async (dirHandle, path, parentEl) => {
+      let entries = [];
+      for await (const [name, handle] of dirHandle.entries()) {
+        if (name.startsWith('.')) continue;
+        entries.push({ name, handle, path: path + '/' + name, parentDir: dirHandle });
+      }
+      entries.sort((a, b) => {
+        if (a.handle.kind === b.handle.kind) return a.name.localeCompare(b.name);
+        return a.handle.kind === 'directory' ? -1 : 1;
+      });
+
+      for (const entry of entries) {
+        const node = document.createElement('div');
+        node.className = 'tree-node' + (entry.handle.kind === 'directory' ? ' is-dir' : '');
+        
+        let iconHtml = `<i class="bi bi-${entry.handle.kind === 'directory' ? 'folder' : 'file-text'}"></i>`;
+        let titleHtml = `<span class="tree-node-title" title="${entry.name}">${entry.name}</span>`;
+        let actionsHtml = `<div class="tree-node-actions">`;
+        if (entry.handle.kind === 'directory') {
+          actionsHtml += `<button class="tree-node-action-btn" title="New File" data-action="new-file"><i class="bi bi-file-earmark-plus"></i></button>`;
+          actionsHtml += `<button class="tree-node-action-btn" title="New Folder" data-action="new-folder"><i class="bi bi-folder-plus"></i></button>`;
+        }
+        actionsHtml += `<button class="tree-node-action-btn" title="Rename" data-action="rename"><i class="bi bi-pencil"></i></button>`;
+        actionsHtml += `<button class="tree-node-action-btn" title="Delete" data-action="delete"><i class="bi bi-trash"></i></button>`;
+        actionsHtml += `</div>`;
+        
+        node.innerHTML = iconHtml + titleHtml + actionsHtml;
+        parentEl.appendChild(node);
+        
+        let childrenCont = null;
+        if (entry.handle.kind === 'directory') {
+          childrenCont = document.createElement('div');
+          childrenCont.className = 'tree-children';
+          childrenCont.style.paddingLeft = '16px';
+          parentEl.appendChild(childrenCont);
+          
+          if (expandedVaultPaths.has(entry.path)) {
+            childrenCont.classList.add('expanded');
+            node.querySelector('i').className = 'bi bi-folder2-open';
+          }
+          
+          await buildTree(entry.handle, entry.path, childrenCont);
+        }
+
+        node.onclick = async (e) => {
+          const actionBtn = e.target.closest('.tree-node-action-btn');
+          if (actionBtn) {
+            e.stopPropagation();
+            const action = actionBtn.dataset.action;
+            try {
+              if (action === 'new-file') {
+                let name = prompt('New Markdown File Name:');
+                if (name) {
+                  if (!name.endsWith('.md')) name += '.md';
+                  await entry.handle.getFileHandle(name, { create: true });
+                  expandedVaultPaths.add(entry.path);
+                  await renderVaultTree();
+                }
+              } else if (action === 'new-folder') {
+                let name = prompt('New Folder Name:');
+                if (name) {
+                  await entry.handle.getDirectoryHandle(name, { create: true });
+                  expandedVaultPaths.add(entry.path);
+                  await renderVaultTree();
+                }
+              } else if (action === 'delete') {
+                if (confirm('Are you sure you want to delete "' + entry.name + '"?')) {
+                  await entry.parentDir.removeEntry(entry.name, { recursive: true });
+                  await renderVaultTree();
+                }
+              } else if (action === 'rename') {
+                const titleSpan = node.querySelector('.tree-node-title');
+                startInlineRename(titleSpan, entry.name, async (newName) => {
+                  if (newName && newName !== entry.name) {
+                    const originalHtml = actionBtn.innerHTML;
+                    actionBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+                    await doVaultRename(entry, newName, () => {
+                      titleSpan.replaceWith(titleSpan.cloneNode(true)); // restore on fail
+                    });
+                  } else {
+                    await renderVaultTree(); // restore instantly if unchanged
+                  }
+                });
+              }
+            } catch (err) {
+              alert('Action failed: ' + err.message);
+            }
+            return;
+          }
+
+          e.stopPropagation();
+          if (entry.handle.kind === 'directory') {
+            childrenCont.classList.toggle('expanded');
+            if (childrenCont.classList.contains('expanded')) {
+               expandedVaultPaths.add(entry.path);
+            } else {
+               expandedVaultPaths.delete(entry.path);
+            }
+            node.querySelector('i').className = `bi bi-${childrenCont.classList.contains('expanded') ? 'folder2-open' : 'folder'}`;
+          } else if (entry.name.endsWith('.md')) {
+            await openVaultFile(entry);
+            document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('active'));
+            node.classList.add('active');
+          }
+        };
+
+        const titleSpan = node.querySelector('.tree-node-title');
+        titleSpan.ondblclick = (e) => {
+          e.stopPropagation();
+          startInlineRename(titleSpan, entry.name, async (newName) => {
+            if (newName && newName !== entry.name) {
+              await doVaultRename(entry, newName);
+            } else {
+              await renderVaultTree();
+            }
+          });
+        };
+
+        if (entry.handle.kind === 'file' && entry.name.endsWith('.md')) {
+          entry.handle.getFile().then(f => f.text()).then(text => {
+            if (vaultMiniSearch) {
+               vaultMiniSearch.add({ id: entry.path, title: entry.name, path: entry.path, content: text });
+            }
+          });
+        }
+      }
+    };
+
+    await buildTree(vaultDirHandle, '', treeEl);
+    await checkVirtualSync();
+  }
+  
+  async function checkVirtualSync() {
+    const syncBtn = document.getElementById('sync-vault-btn');
+    if (!syncBtn) return;
+    
+    if (localVaultMode && vaultDirHandle) {
+      try {
+        const virtualTabsText = await localforage.getItem(STORAGE_KEY);
+        const virtualTabs = virtualTabsText ? JSON.parse(virtualTabsText) : [];
+        if (virtualTabs && virtualTabs.length > 0) {
+          syncBtn.style.display = 'inline-flex';
+          syncBtn.onclick = async () => {
+            if (!confirm('Import ' + virtualTabs.length + ' virtual notes into your Vault?')) return;
+            try {
+              for (const t of virtualTabs) {
+                const safeTitle = (t.title || 'Untitled').replace(/[\\/:*?"<>|]/g, '-');
+                let filename = safeTitle + '.md';
+                let fileHandle;
+                try {
+                  fileHandle = await vaultDirHandle.getFileHandle(filename, { create: false });
+                  // If it doesn't throw, the file exists, so we append a timestamp
+                  filename = safeTitle + '_' + Date.now() + '.md';
+                  fileHandle = await vaultDirHandle.getFileHandle(filename, { create: true });
+                } catch(e) {
+                  // File does not exist, safe to create
+                  fileHandle = await vaultDirHandle.getFileHandle(filename, { create: true });
+                }
+                const writable = await fileHandle.createWritable();
+                await writable.write(t.content || '');
+                await writable.close();
+              }
+              alert('Import successful! Virtual notes are now in your vault.');
+              await localforage.removeItem(STORAGE_KEY); // Option: Clean up virtual space since it's imported
+              syncBtn.style.display = 'none';
+              await renderVaultTree();
+            } catch(e) {
+              alert('Error importing notes: ' + e.message);
+            }
+          };
+        } else {
+          syncBtn.style.display = 'none';
+        }
+      } catch (e) {
+        syncBtn.style.display = 'none';
+      }
+    } else {
+      syncBtn.style.display = 'none';
+    }
+  }
+
+  // Hook "Open Vault" button
+  const openVaultBtn = document.getElementById('open-vault-btn');
+  if (openVaultBtn) {
+    openVaultBtn.addEventListener('click', openLocalVault);
+  }
+
+  // Resizer logic
+  const sidebarResizer = document.getElementById('sidebar-resizer');
+  const sidebarExplorer = document.getElementById('sidebar-explorer');
+  let isResizingSidebar = false;
+
+  if (sidebarResizer) {
+    sidebarResizer.addEventListener('mousedown', (e) => {
+      isResizingSidebar = true;
+      document.body.style.cursor = 'col-resize';
+      sidebarResizer.classList.add('dragging');
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizingSidebar) return;
+      sidebarExplorer.style.width = Math.max(150, Math.min(e.clientX, window.innerWidth - 300)) + 'px';
+    });
+    document.addEventListener('mouseup', () => {
+      if (isResizingSidebar) {
+        isResizingSidebar = false;
+        document.body.style.cursor = 'default';
+        sidebarResizer.classList.remove('dragging');
+      }
+    });
+  }
+
+  async function migrateFromLocalStorage() {
+    const keys = [STORAGE_KEY, ACTIVE_TAB_KEY, UNTITLED_COUNTER_KEY, GROUPS_KEY, 'kido-md-history', 'kido-privacy-dismissed'];
+    for (const key of keys) {
+      const val = localStorage.getItem(key);
+      if (val !== null) {
+        await localforage.setItem(key, val);
+        localStorage.removeItem(key);
+      }
+    }
+  }
+
+  async function loadTabsFromStorage() {
+    try {
+      const data = await localforage.getItem(STORAGE_KEY);
+      return data ? JSON.parse(data) : [];
     } catch (e) {
       return [];
     }
   }
 
   function saveTabsToStorage(tabsArr) {
+    if (localVaultMode) return; // Do not save entire array into IndexedDB in block when vault is active
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tabsArr));
+      localforage.setItem(STORAGE_KEY, JSON.stringify(tabsArr));
     } catch (e) {
-      console.warn('Failed to save tabs to localStorage:', e);
+      console.warn('Failed to save tabs to localforage:', e);
     }
   }
 
-  function loadActiveTabId() {
-    return localStorage.getItem(ACTIVE_TAB_KEY);
+  async function loadActiveTabId() {
+    return await localforage.getItem(ACTIVE_TAB_KEY);
   }
 
   function saveActiveTabId(id) {
-    localStorage.setItem(ACTIVE_TAB_KEY, id);
+    if (localVaultMode) return;
+    localforage.setItem(ACTIVE_TAB_KEY, id);
   }
 
-  function loadUntitledCounter() {
-    return parseInt(localStorage.getItem(UNTITLED_COUNTER_KEY) || '0', 10);
+  async function loadUntitledCounter() {
+    const val = await localforage.getItem(UNTITLED_COUNTER_KEY);
+    return parseInt(val || '0', 10);
   }
 
   function saveUntitledCounter(val) {
-    localStorage.setItem(UNTITLED_COUNTER_KEY, String(val));
+    localforage.setItem(UNTITLED_COUNTER_KEY, String(val));
   }
 
   function nextUntitledTitle() {
@@ -432,13 +858,15 @@ This is a fully client-side application. Your content never leaves your browser 
 
   let tabGroups = [];
 
-  function loadGroups() {
-    try { return JSON.parse(localStorage.getItem(GROUPS_KEY)) || []; }
-    catch { return []; }
+  async function loadGroups() {
+    try { 
+      const data = await localforage.getItem(GROUPS_KEY);
+      return data ? JSON.parse(data) : []; 
+    } catch { return []; }
   }
 
   function saveGroups() {
-    localStorage.setItem(GROUPS_KEY, JSON.stringify(tabGroups));
+    localforage.setItem(GROUPS_KEY, JSON.stringify(tabGroups));
   }
 
   function createGroup(name, colorName) {
@@ -570,11 +998,31 @@ This is a fully client-side application. Your content never leaves your browser 
       const titleSpan = document.createElement('span');
       titleSpan.className = 'tab-title';
       titleSpan.textContent = tab.title || 'Untitled';
-      titleSpan.title = tab.title || 'Untitled';
-      titleSpan.addEventListener('dblclick', (e) => {
+      
+      titleSpan.ondblclick = (e) => {
         e.stopPropagation();
-        renameTab(tab.id);
-      });
+        startInlineRename(titleSpan, tab.title || 'Untitled', async (newName) => {
+          if (newName && newName !== tab.title) {
+            if (localVaultMode && tab.handle) {
+              const entry = {
+                 name: tab.id.split('/').pop(),
+                 handle: tab.handle,
+                 path: tab.id,
+                 parentDir: vaultDirHandle // approximation for root, not perfect for deep files.
+              };
+              // Note: Native File Renaming only safely supported at Root with approximation,
+              // For full support, tab.parentDir must be stored inside openVaultFile.
+              // To prevent bugs, we'll just fall back to standard Virtual Title change if parentDir isn't found
+            }
+            tab.title = newName;
+            saveTabsToStorage(tabs);
+            renderTabBar(tabs, currentActiveTabId);
+          } else {
+            renderTabBar(tabs, currentActiveTabId);
+          }
+        });
+      };
+      titleSpan.title = tab.title || 'Untitled';
 
       const menuBtn = document.createElement('button');
       menuBtn.className = 'tab-menu-btn';
@@ -927,13 +1375,27 @@ This is a fully client-side application. Your content never leaves your browser 
     });
   });
 
-  function saveCurrentTabState() {
+  async function saveCurrentTabState() {
     const tab = tabs.find(function(t) { return t.id === activeTabId; });
     if (!tab) return;
     tab.content = markdownEditor.value;
     tab.scrollPos = markdownEditor.scrollTop;
     tab.viewMode = currentViewMode || 'split';
-    saveTabsToStorage(tabs);
+    
+    if (tab.handle) {
+      try {
+        const writable = await tab.handle.createWritable();
+        await writable.write(tab.content);
+        await writable.close();
+        if (vaultMiniSearch) {
+          vaultMiniSearch.add({ id: tab.id, title: tab.title, path: tab.path, content: tab.content });
+        }
+      } catch(e) {
+        console.error('Failed to write cleanly to vault:', e);
+      }
+    } else {
+      saveTabsToStorage(tabs);
+    }
   }
 
   function restoreViewMode(mode) {
@@ -941,14 +1403,24 @@ This is a fully client-side application. Your content never leaves your browser 
     setViewMode(mode || 'split');
   }
 
-  function switchTab(tabId) {
-    if (tabId === activeTabId) return;
-    saveCurrentTabState();
+  async function switchTab(tabId) {
+    if (tabId === activeTabId && !localVaultMode) return;
+    await saveCurrentTabState();
     activeTabId = tabId;
     saveActiveTabId(activeTabId);
     const tab = tabs.find(function(t) { return t.id === tabId; });
     if (!tab) return;
-    markdownEditor.value = tab.content;
+    
+    if (tab.handle && !tab.content) {
+      try {
+        const file = await tab.handle.getFile();
+        tab.content = await file.text();
+      } catch(e) {
+        tab.content = 'Error reading file';
+      }
+    }
+    
+    markdownEditor.value = tab.content || '';
     restoreViewMode(tab.viewMode);
     renderMarkdown();
     requestAnimationFrame(function() {
@@ -959,10 +1431,6 @@ This is a fully client-side application. Your content never leaves your browser 
 
   function newTab(content, title) {
     if (content === undefined) content = '';
-    if (tabs.length >= 20) {
-      alert('Maximum of 20 tabs reached. Please close an existing tab to open a new one.');
-      return;
-    }
     if (!title) title = nextUntitledTitle();
     const tab = createTab(content, title);
     tabs.push(tab);
@@ -1051,10 +1519,6 @@ This is a fully client-side application. Your content never leaves your browser 
   function duplicateTab(tabId) {
     const tab = tabs.find(function(t) { return t.id === tabId; });
     if (!tab) return;
-    if (tabs.length >= 20) {
-      alert('Maximum of 20 tabs reached. Please close an existing tab to open a new one.');
-      return;
-    }
     saveCurrentTabState();
     const dupTitle = tab.title + ' (copy)';
     const dup = createTab(tab.content, dupTitle, tab.viewMode);
@@ -1102,26 +1566,46 @@ This is a fully client-side application. Your content never leaves your browser 
     cancelBtn.addEventListener('click', doCancel);
   }
 
-  function initTabs() {
-    untitledCounter = loadUntitledCounter();
-    tabs = loadTabsFromStorage();
-    activeTabId = loadActiveTabId();
-    if (tabs.length === 0) {
-      const tab = createTab(sampleMarkdown, 'Welcome to Markdown');
-      tabs.push(tab);
-      activeTabId = tab.id;
-      saveTabsToStorage(tabs);
-      saveActiveTabId(activeTabId);
-    } else if (!tabs.find(function(t) { return t.id === activeTabId; })) {
-      activeTabId = tabs[0].id;
-      saveActiveTabId(activeTabId);
+  async function initTabs() {
+    await migrateFromLocalStorage();
+    await initHistory();
+    tabGroups = await loadGroups();
+    
+    // Check if there is an active Vault handle
+    const storedHandle = await localforage.getItem(VAULT_HANDLE_KEY);
+    if (storedHandle) {
+      await initVault(storedHandle);
+      // initVault completely overtakes the UI, so we can return early or just skip virtual tabs setup
     }
-    const activeTab = tabs.find(function(t) { return t.id === activeTabId; });
-    markdownEditor.value = activeTab.content;
-    restoreViewMode(activeTab.viewMode);
+    
+    untitledCounter = await loadUntitledCounter();
+    tabs = await loadTabsFromStorage();
+    activeTabId = await loadActiveTabId();
+    if (!localVaultMode) {
+      if (tabs.length === 0) {
+        const tab = createTab(sampleMarkdown, 'Welcome to Markdown');
+        tabs.push(tab);
+        activeTabId = tab.id;
+        saveTabsToStorage(tabs);
+        saveActiveTabId(activeTabId);
+      } else if (!tabs.find(function(t) { return t.id === activeTabId; })) {
+        activeTabId = tabs[0].id;
+        saveActiveTabId(activeTabId);
+      }
+      const activeTab = tabs.find(function(t) { return t.id === activeTabId; });
+      if (activeTab) {
+        markdownEditor.value = activeTab.content || '';
+        restoreViewMode(activeTab.viewMode);
+      }
+    }
+    
+    // Always render markdown and trigger updates
     renderMarkdown();
     requestAnimationFrame(function() {
-      markdownEditor.scrollTop = activeTab.scrollPos || 0;
+      if (!localVaultMode) {
+        const activeTab = tabs.find(function(t) { return t.id === activeTabId; });
+        if (activeTab) markdownEditor.scrollTop = activeTab.scrollPos || 0;
+      }
     });
     renderTabBar(tabs, activeTabId);
   }
@@ -1144,6 +1628,11 @@ This is a fully client-side application. Your content never leaves your browser 
       try {
         const mermaidNodes = markdownPreview.querySelectorAll('.mermaid');
         if (mermaidNodes.length > 0) {
+          mermaidNodes.forEach(node => {
+            if (node.innerHTML.includes('\\n')) {
+              node.innerHTML = node.innerHTML.replace(/\\n/g, '<br/>');
+            }
+          });
           Promise.resolve(mermaid.init(undefined, mermaidNodes))
             .then(() => addMermaidToolbars())
             .catch((e) => {
@@ -1539,8 +2028,9 @@ This is a fully client-side application. Your content never leaves your browser 
     });
   }
   
-  initTabs();
-  updateMobileStats();
+  initTabs().then(() => {
+    updateMobileStats();
+  });
 
   // Initialize resizer - Story 1.3
   initResizer();
@@ -2595,10 +3085,58 @@ This is a fully client-side application. Your content never leaves your browser 
     }
   }
 
-  document.addEventListener("keydown", function (e) {
+  document.addEventListener("keydown", async function (e) {
     if ((e.ctrlKey || e.metaKey) && e.key === "s") {
       e.preventDefault();
-      exportMd.click();
+      
+      const currentTab = tabs.find(t => t.id === activeTabId);
+      if (localVaultMode && vaultDirHandle && currentTab) {
+        if (currentTab.handle) {
+          await saveCurrentTabState();
+          const exportBtn = document.getElementById('exportDropdown');
+          if (exportBtn) {
+             const origHtml = exportBtn.innerHTML;
+             exportBtn.innerHTML = '<i class="bi bi-check2"></i> <span class="btn-label">Saved</span>';
+             setTimeout(() => { exportBtn.innerHTML = origHtml; }, 1500);
+          }
+        } else {
+          try {
+            let name = prompt('Save to Vault as:', currentTab.title + '.md');
+            if (name) {
+              if (!name.endsWith('.md')) name += '.md';
+              let fileHandle;
+              try {
+                fileHandle = await vaultDirHandle.getFileHandle(name, { create: false });
+                if (!confirm('File "' + name + '" already exists. Overwrite?')) return;
+                fileHandle = await vaultDirHandle.getFileHandle(name, { create: true });
+              } catch(err) {
+                fileHandle = await vaultDirHandle.getFileHandle(name, { create: true });
+              }
+              const writable = await fileHandle.createWritable();
+              await writable.write(currentTab.content || markdownEditor.value);
+              await writable.close();
+              
+              currentTab.handle = fileHandle;
+              currentTab.title = name.replace(/\\.md$/i, '');
+              currentTab.id = '/' + name;
+              
+              renderTabBar(tabs, activeTabId);
+              await renderVaultTree();
+              
+              const exportBtn = document.getElementById('exportDropdown');
+              if (exportBtn) {
+                 const origHtml = exportBtn.innerHTML;
+                 exportBtn.innerHTML = '<i class="bi bi-check2"></i> <span class="btn-label">Saved</span>';
+                 setTimeout(() => { exportBtn.innerHTML = origHtml; }, 1500);
+              }
+            }
+          } catch(err) {
+            alert('Error saving to vault: ' + err.message);
+          }
+        }
+      } else {
+        exportMd.click();
+      }
     }
     if ((e.ctrlKey || e.metaKey) && e.key === "c") {
       const activeEl = document.activeElement;
@@ -3017,17 +3555,32 @@ This is a fully client-side application. Your content never leaves your browser 
     searchResults.innerHTML = '<div class="search-empty">Type to search across all your notes</div>';
   }
 
-  function performSearch(query) {
+  async function performSearch(query) {
     if (!query || query.length < 2) {
       searchResults.innerHTML = '<div class="search-empty">Type to search across all your notes</div>';
       return;
     }
-    const allTabs = loadTabsFromStorage();
+    
+    let matches = [];
     const lowerQuery = query.toLowerCase();
-    const matches = allTabs.filter(t =>
-      (t.title && t.title.toLowerCase().includes(lowerQuery)) ||
-      (t.content && t.content.toLowerCase().includes(lowerQuery))
-    );
+
+    if (localVaultMode && vaultMiniSearch) {
+      const results = vaultMiniSearch.search(query, { prefix: true, fuzzy: 0.2 });
+      matches = results.map(r => {
+        return {
+          id: r.id,
+          title: r.title || r.id.split('/').pop(),
+          content: r.content || '',
+          pinned: false
+        };
+      });
+    } else {
+      const allTabs = await loadTabsFromStorage();
+      matches = allTabs.filter(t =>
+        (t.title && t.title.toLowerCase().includes(lowerQuery)) ||
+        (t.content && t.content.toLowerCase().includes(lowerQuery))
+      );
+    }
 
     if (matches.length === 0) {
       searchResults.innerHTML = '<div class="search-empty">No results found</div>';
@@ -3056,10 +3609,19 @@ This is a fully client-side application. Your content never leaves your browser 
     }).join('');
 
     searchResults.querySelectorAll('.search-result-item').forEach(item => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', async () => {
         const tabId = item.dataset.tabId;
         const query = searchInput ? searchInput.value.trim() : '';
-        switchTab(tabId);
+        
+        if (localVaultMode) {
+           // Find entry
+           const entry = vaultEntries ? vaultEntries.find(e => e.path === tabId) : null;
+           if (entry) {
+             await openVaultFile(entry);
+           }
+        } else {
+           await switchTab(tabId);
+        }
         closeSearch();
 
         // Scroll preview pane to first match after render settles
@@ -3217,6 +3779,7 @@ This is a fully client-side application. Your content never leaves your browser 
   // 5. VERSION HISTORY
   // ========================================
   const HISTORY_KEY = 'kido-md-history';
+  let appHistory = [];
   const historyBtn = document.getElementById('history-btn');
   const historyPanel = document.getElementById('history-panel');
   const historyOverlay = document.getElementById('history-overlay');
@@ -3227,13 +3790,22 @@ This is a fully client-side application. Your content never leaves your browser 
   const historyDiffTitle = document.getElementById('history-diff-title');
   const historyBack = document.getElementById('history-back');
 
+  async function initHistory() {
+    try { 
+      const data = await localforage.getItem(HISTORY_KEY);
+      appHistory = data ? JSON.parse(data) : [];
+    } catch { 
+      appHistory = []; 
+    }
+  }
+
   function loadHistory() {
-    try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
-    catch { return []; }
+    return appHistory;
   }
 
   function saveHistory(history) {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    appHistory = history;
+    localforage.setItem(HISTORY_KEY, JSON.stringify(history)).catch(e => console.warn(e));
   }
 
   function generateId() {
@@ -3405,18 +3977,18 @@ This is a fully client-side application. Your content never leaves your browser 
   const restoreBtn = document.getElementById('restore-btn');
   const restoreFileInput = document.getElementById('restore-file-input');
 
-  function exportBackup() {
+  async function exportBackup() {
     const backup = {
       version: 1,
       exportedAt: new Date().toISOString(),
       data: {}
     };
     // Collect all kido-md related keys
-    const keysToBackup = [STORAGE_KEY, ACTIVE_TAB_KEY, UNTITLED_COUNTER_KEY, HISTORY_KEY, 'kido-privacy-dismissed'];
-    keysToBackup.forEach(key => {
-      const val = localStorage.getItem(key);
+    const keysToBackup = [STORAGE_KEY, ACTIVE_TAB_KEY, UNTITLED_COUNTER_KEY, GROUPS_KEY, HISTORY_KEY, 'kido-privacy-dismissed'];
+    for (const key of keysToBackup) {
+      const val = await localforage.getItem(key);
       if (val !== null) backup.data[key] = val;
-    });
+    }
 
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -3429,7 +4001,7 @@ This is a fully client-side application. Your content never leaves your browser 
 
   function importBackup(file) {
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
       try {
         const backup = JSON.parse(e.target.result);
         if (!backup.data || typeof backup.data !== 'object') {
@@ -3438,9 +4010,9 @@ This is a fully client-side application. Your content never leaves your browser 
         }
         if (!confirm('This will replace all your current notes. Are you sure?')) return;
 
-        Object.entries(backup.data).forEach(([key, value]) => {
-          localStorage.setItem(key, value);
-        });
+        for (const [key, value] of Object.entries(backup.data)) {
+          await localforage.setItem(key, value);
+        }
 
         alert('Backup restored successfully! The page will reload.');
         location.reload();

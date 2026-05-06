@@ -1592,10 +1592,24 @@ This is a fully client-side application. Your content never leaves your browser 
         activeTabId = tabs[0].id;
         saveActiveTabId(activeTabId);
       }
-      const activeTab = tabs.find(function(t) { return t.id === activeTabId; });
-      if (activeTab) {
-        markdownEditor.value = activeTab.content || '';
-        restoreViewMode(activeTab.viewMode);
+
+      // Check for share hash BEFORE restoring the active tab content
+      // This prevents the active tab from overwriting shared content
+      const shareContent = decodeShareHash();
+      if (shareContent !== null) {
+        const shareTab = createTab(shareContent, 'Shared Note');
+        tabs.push(shareTab);
+        activeTabId = shareTab.id;
+        markdownEditor.value = shareContent;
+        restoreViewMode('split');
+        saveTabsToStorage(tabs);
+        saveActiveTabId(activeTabId);
+      } else {
+        const activeTab = tabs.find(function(t) { return t.id === activeTabId; });
+        if (activeTab) {
+          markdownEditor.value = activeTab.content || '';
+          restoreViewMode(activeTab.viewMode);
+        }
       }
     }
     
@@ -3014,10 +3028,15 @@ This is a fully client-side application. Your content never leaves your browser 
   shareButton.addEventListener("click", function () { copyShareUrl(shareButton); });
   mobileShareButton.addEventListener("click", function () { copyShareUrl(mobileShareButton); });
 
-  function loadFromShareHash() {
+  /**
+   * Extract and decode share hash from the URL.
+   * Returns the decoded markdown string, or null if no share hash is present.
+   * This is a pure decoder — it does NOT touch the editor or tabs.
+   */
+  function decodeShareHash() {
     if (typeof pako === 'undefined') {
       console.error("pako is undefined. Cannot load shared content.");
-      return;
+      return null;
     }
 
     let encoded = '';
@@ -3034,33 +3053,48 @@ This is a fully client-side application. Your content never leaves your browser 
       }
     }
 
-    if (!encoded) return;
+    if (!encoded) return null;
 
     // Remove any trailing tracking parameters or garbage added by social apps
     const validMatch = encoded.match(/^[A-Za-z0-9\-_]+/);
     if (validMatch) {
       encoded = validMatch[0];
     } else {
-      return;
+      return null;
     }
 
     try {
-      const decoded = decodeMarkdownFromShare(encoded);
-      markdownEditor.value = decoded;
-      renderMarkdown();
-      saveCurrentTabState();
+      return decodeMarkdownFromShare(encoded);
     } catch (e) {
-      console.error("Failed to load shared content:", e);
+      console.error("Failed to decode shared content:", e);
       alert("The shared URL could not be decoded. It may be corrupted or incomplete.");
+      return null;
     }
   }
 
-  loadFromShareHash();
-  
-  // Also handle hash changes if the user clicks a share link while the app is already open
+  /**
+   * Handle share hash changes when the app is already open.
+   * Creates a new tab with the shared content.
+   */
+  function loadFromShareHashChange() {
+    const shareContent = decodeShareHash();
+    if (shareContent === null) return;
+
+    const shareTab = createTab(shareContent, 'Shared Note');
+    tabs.push(shareTab);
+    activeTabId = shareTab.id;
+    markdownEditor.value = shareContent;
+    restoreViewMode('split');
+    renderMarkdown();
+    saveTabsToStorage(tabs);
+    saveActiveTabId(activeTabId);
+    renderTabBar(tabs, activeTabId);
+  }
+
+  // Handle hash changes if the user clicks a share link while the app is already open
   window.addEventListener('hashchange', () => {
     if (window.location.hash.startsWith('#share=')) {
-      loadFromShareHash();
+      loadFromShareHashChange();
     }
   });
 

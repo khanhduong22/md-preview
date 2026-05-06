@@ -118,8 +118,16 @@ document.addEventListener("DOMContentLoaded", function () {
           .replace(/(\b\d+\.)\s+/g, '$1&nbsp;')
           .replace(/(^|[\[\(|]\s*)([-*+])\s+/g, '$1$2&nbsp;');
       }
+      const escapeHtml = (unsafe) => {
+        return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      };
         
-      return `<div class="mermaid-container"><div class="mermaid" id="${uniqueId}">${fixedCode}</div></div>`;
+      return `<div class="mermaid-container"><pre class="mermaid" id="${uniqueId}">${escapeHtml(fixedCode)}</pre></div>`;
     }
     
     const validLanguage = hljs.getLanguage(language) ? language : "plaintext";

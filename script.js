@@ -149,12 +149,14 @@ document.addEventListener("DOMContentLoaded", function () {
         const t = l.trim();
         if (!t) return true;
         if (/^[ \t]/.test(l)) return true; // indented
-        if (/^(subgraph|end|click|style|class|classDef|linkStyle|direction|note|participant|actor|activate|deactivate|group|service|title|x-axis|y-axis|quadrant-\d|requirement|functionalRequirement|performanceRequirement|interfaceRequirement|designConstraint|element|contains|copies|derives|satisfies|verifies|refines|traces)\b/i.test(t)) return true;
+        if (/^(subgraph|end|click|style|class|classDef|linkStyle|direction|note|participant|actor|activate|deactivate|group|service|title|x-axis|y-axis|quadrant-\d|requirement|functionalRequirement|performanceRequirement|interfaceRequirement|designConstraint|element|contains|copies|derives|satisfies|verifies|refines|traces|columns|space)\b/i.test(t)) return true;
         if (/[-\=]+\>/.test(t) || t.includes('---') || t.includes('===')) return true;
         if (/\[.*\]|\(.*\)|{.*}|>.*\]/.test(t)) return true;
         if (t.includes(':')) return true;
         if (/^"[^"]+"\s*:\s*\[/.test(t)) return true; // quadrantChart data entries
         if (/^[A-Za-z0-9_]+$/.test(t)) return true;
+        // sankey syntax
+        if (t.split(',').length >= 3 && !isNaN(parseFloat(t.split(',').pop()))) return true;
         return false;
       };
 

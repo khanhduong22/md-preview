@@ -2957,7 +2957,11 @@ This is a fully client-side application. Your content never leaves your browser 
   }
 
   function decodeMarkdownFromShare(encoded) {
-    const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+    let base64 = decodeURIComponent(encoded).replace(/-/g, '+').replace(/_/g, '/');
+    // Add missing padding to prevent atob InvalidCharacterError in some browsers
+    while (base64.length % 4) {
+      base64 += '=';
+    }
     const binary = atob(base64);
     const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
     return new TextDecoder().decode(pako.inflate(bytes));
@@ -3011,11 +3015,35 @@ This is a fully client-side application. Your content never leaves your browser 
   mobileShareButton.addEventListener("click", function () { copyShareUrl(mobileShareButton); });
 
   function loadFromShareHash() {
-    if (typeof pako === 'undefined') return;
+    if (typeof pako === 'undefined') {
+      console.error("pako is undefined. Cannot load shared content.");
+      return;
+    }
+
+    let encoded = '';
     const hash = window.location.hash;
-    if (!hash.startsWith('#share=')) return;
-    const encoded = hash.slice('#share='.length);
+    
+    if (hash.startsWith('#share=')) {
+      encoded = hash.slice('#share='.length);
+    } else {
+      // Fallback for percent-encoded hashes or mangled URLs by chat apps
+      const href = window.location.href;
+      const shareMatch = href.match(/(?:#|%23)share=([^&?]*)/);
+      if (shareMatch) {
+        encoded = shareMatch[1];
+      }
+    }
+
     if (!encoded) return;
+
+    // Remove any trailing tracking parameters or garbage added by social apps
+    const validMatch = encoded.match(/^[A-Za-z0-9\-_]+/);
+    if (validMatch) {
+      encoded = validMatch[0];
+    } else {
+      return;
+    }
+
     try {
       const decoded = decodeMarkdownFromShare(encoded);
       markdownEditor.value = decoded;
@@ -3028,6 +3056,13 @@ This is a fully client-side application. Your content never leaves your browser 
   }
 
   loadFromShareHash();
+  
+  // Also handle hash changes if the user clicks a share link while the app is already open
+  window.addEventListener('hashchange', () => {
+    if (window.location.hash.startsWith('#share=')) {
+      loadFromShareHash();
+    }
+  });
 
   const dropEvents = ["dragenter", "dragover", "dragleave", "drop"];
 

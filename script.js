@@ -110,10 +110,14 @@ document.addEventListener("DOMContentLoaded", function () {
       const uniqueId = 'mermaid-diagram-' + Math.random().toString(36).substr(2, 9);
       
       // Workaround for Mermaid v11+ "Unsupported markdown: list" error in flowcharts
-      // Replace spaces after list-like markers with non-breaking spaces
-      const fixedCode = code
-        .replace(/(\b\d+\.)\s+/g, '$1&nbsp;')
-        .replace(/(^|[\[\(|]\s*)([-*+])\s+/g, '$1$2&nbsp;');
+      // Only apply to flowchart/graph types to avoid mangling quadrantChart, requirementDiagram, etc.
+      let fixedCode = code;
+      const isFlowchart = /^\s*(flowchart|graph)\b/i.test(code);
+      if (isFlowchart) {
+        fixedCode = code
+          .replace(/(\b\d+\.)\s+/g, '$1&nbsp;')
+          .replace(/(^|[\[\(|]\s*)([-*+])\s+/g, '$1$2&nbsp;');
+      }
         
       return `<div class="mermaid-container"><div class="mermaid" id="${uniqueId}">${fixedCode}</div></div>`;
     }
@@ -139,16 +143,17 @@ document.addEventListener("DOMContentLoaded", function () {
       let inMermaid = false;
       let inCodeBlock = false;
       
-      const mermaidStart = /^(flowchart|sequenceDiagram|classDiagram|stateDiagram|stateDiagram-v2|erDiagram|journey|gantt|pie|gitGraph|mindmap|timeline|graph|architecture-beta|architecture|sankey-beta|xychart-beta|block-beta|packet-beta|ishikawa)\b/i;
+      const mermaidStart = /^(flowchart|sequenceDiagram|classDiagram|stateDiagram|stateDiagram-v2|erDiagram|journey|gantt|pie|gitGraph|mindmap|timeline|graph|architecture-beta|architecture|sankey-beta|xychart-beta|block-beta|packet-beta|ishikawa|quadrantChart|requirementDiagram)\b/i;
       
       const looksLikeMermaid = (l) => {
         const t = l.trim();
         if (!t) return true;
         if (/^[ \t]/.test(l)) return true; // indented
-        if (/^(subgraph|end|click|style|class|classDef|linkStyle|direction|note|participant|actor|activate|deactivate|group|service)\b/i.test(t)) return true;
+        if (/^(subgraph|end|click|style|class|classDef|linkStyle|direction|note|participant|actor|activate|deactivate|group|service|title|x-axis|y-axis|quadrant-\d|requirement|functionalRequirement|performanceRequirement|interfaceRequirement|designConstraint|element|contains|copies|derives|satisfies|verifies|refines|traces)\b/i.test(t)) return true;
         if (/[-\=]+\>/.test(t) || t.includes('---') || t.includes('===')) return true;
         if (/\[.*\]|\(.*\)|{.*}|>.*\]/.test(t)) return true;
         if (t.includes(':')) return true;
+        if (/^"[^"]+"\s*:\s*\[/.test(t)) return true; // quadrantChart data entries
         if (/^[A-Za-z0-9_]+$/.test(t)) return true;
         return false;
       };

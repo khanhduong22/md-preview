@@ -4276,10 +4276,26 @@ This is a fully client-side application. Your content never leaves your browser 
           }
         },
         {
+          element: '#import-button',
+          popover: {
+            title: 'Import File 📤',
+            description: 'Nạp nhanh một file Markdown (.md) từ máy tính của bạn vào Editor.',
+            side: "bottom", align: 'start'
+          }
+        },
+        {
           element: '#exportDropdown',
           popover: {
             title: 'Xuất / Nhập Đa dạng 📥',
             description: 'Hỗ trợ xuất sang HTML, PDF, Markdown hoặc Backup tải toàn bộ File (JSON) về máy.',
+            side: "bottom", align: 'start'
+          }
+        },
+        {
+          element: '#copy-markdown-button',
+          popover: {
+            title: 'Copy Markdown 📋',
+            description: 'Copy nhanh toàn bộ nội dung Markdown hiện tại vào Clipboard chỉ với một Click.',
             side: "bottom", align: 'start'
           }
         },

@@ -4185,8 +4185,8 @@ This is a fully client-side application. Your content never leaves your browser 
         {
           element: '.tab-bar',
           popover: {
-            title: 'Hệ thống Đa Tab 📑',
-            description: 'Mở nhiều file cùng lúc, chuyển đổi siêu tốc giống hệt VS Code!',
+            title: 'Tab & Group Tabs 📑',
+            description: 'Mở nhiều file cùng lúc, gom nhóm (Group) màu sắc các Tab lại với nhau siêu gọn gàng y hệt trình duyệt Chrome!',
             side: "bottom", align: 'start'
           }
         },

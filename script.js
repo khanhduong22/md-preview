@@ -4223,6 +4223,22 @@ This is a fully client-side application. Your content never leaves your browser 
           }
         },
         {
+          element: '#search-btn',
+          popover: {
+            title: 'Tìm kiếm Toàn năng 🔍',
+            description: 'Bấm phím tắt Ctrl+K để tìm kiếm nội dung siêu tốc xuyên suốt toàn bộ các file trong Vault của bạn.',
+            side: "bottom", align: 'end'
+          }
+        },
+        {
+          element: '#history-btn',
+          popover: {
+            title: 'Lịch sử Phiên bản ⏱️',
+            description: 'Lỡ tay xoá nhầm? Đừng lo! Hệ thống tự động lưu lại các mốc thời gian để bạn dễ dàng phục hồi lại bản nháp cũ.',
+            side: "bottom", align: 'end'
+          }
+        },
+        {
           element: '.view-mode-group',
           popover: {
             title: 'Chế độ Hiển thị 🪟',

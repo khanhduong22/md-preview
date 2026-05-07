@@ -58,6 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const mobileCopyMarkdown  = document.getElementById("mobile-copy-markdown");
   const mobileThemeToggle   = document.getElementById("mobile-theme-toggle");
   const shareButton         = document.getElementById("share-button");
+  const tourBtn             = document.getElementById("tour-btn");
   const mobileShareButton   = document.getElementById("mobile-share-button");
 
   // Check dark mode preference first for proper initialization
@@ -4120,6 +4121,106 @@ This is a fully client-side application. Your content never leaves your browser 
       if (e.target.files.length > 0) importBackup(e.target.files[0]);
       restoreFileInput.value = ''; // reset
     });
+  }
+
+  // --- Guided Tour (Driver.js) ---
+  function startTour() {
+    if (!window.driver) return;
+    const driverObj = window.driver.js.driver({
+      showProgress: true,
+      animate: true,
+      allowClose: true,
+      nextBtnText: 'Tiếp tục ➔',
+      prevBtnText: '⬅ Quay lại',
+      doneBtnText: 'Hoàn thành ✔',
+      steps: [
+        {
+          popover: {
+            title: 'Chào mừng đến với 2ndBrain! 🚀',
+            description: 'Chào mừng bạn đến với Markdown Editor cao cấp. Hãy dành 1 phút để lướt qua các tính năng đỉnh cao nhé!',
+            align: 'center'
+          }
+        },
+        {
+          element: '.sidebar',
+          popover: {
+            title: 'Quản lý File Local 📁',
+            description: 'Toàn bộ tài liệu của bạn được lưu an toàn tuyệt đối ngay trên trình duyệt (LocalFirst). Không có bất kỳ dữ liệu nào gửi lên Server lạ.',
+            side: "right", align: 'start'
+          }
+        },
+        {
+          element: '.editor-pane',
+          popover: {
+            title: 'Soạn thảo Siêu tốc ⚡',
+            description: 'Gõ Markdown ở đây. Bạn có thể kéo thả ảnh vào hoặc Paste ảnh trực tiếp. Đừng quên dùng phím tắt Ctrl+S để lưu nhé!',
+            side: "right", align: 'start'
+          }
+        },
+        {
+          element: '.preview-pane',
+          popover: {
+            title: 'Render Thời gian thực 👁️',
+            description: 'Kết quả hiển thị ngay lập tức. Hỗ trợ Toán học (MathJax), Code Highlight (Highlight.js) và tới 30 loại sơ đồ siêu đỉnh (Mermaid.js)!',
+            side: "left", align: 'start'
+          }
+        },
+        {
+          element: '#toggle-sync',
+          popover: {
+            title: 'Đồng bộ Cuộn trang ↕️',
+            description: 'Tính năng cuộn đồng thời Editor và Preview cực mượt, giúp bạn không bao giờ bị lạc dòng.',
+            side: "bottom", align: 'start'
+          }
+        },
+        {
+          element: '#share-button',
+          popover: {
+            title: 'Chia sẻ không cần Database 🔗',
+            description: 'Toàn bộ bài viết sẽ được nén lại thành Link. Bạn bè có thể xem ngay lập tức qua mạng mà không cần Database hay Đăng nhập!',
+            side: "bottom", align: 'end'
+          }
+        },
+        {
+          element: '.view-mode-group',
+          popover: {
+            title: 'Chế độ Hiển thị 🪟',
+            description: 'Chỉ Code, Chia đôi, hoặc Chỉ xem. Bấm nút Hide (mũi tên lên) ẩn thanh công cụ để tập trung tối đa.',
+            side: "bottom", align: 'center'
+          }
+        },
+        {
+          element: '#exportDropdown',
+          popover: {
+            title: 'Xuất / Nhập Đa dạng 📥',
+            description: 'Hỗ trợ xuất sang HTML, PDF, Markdown hoặc Backup tải toàn bộ File (JSON) về máy.',
+            side: "bottom", align: 'start'
+          }
+        },
+        {
+          element: '#tour-btn',
+          popover: {
+            title: 'Trợ giúp ❓',
+            description: 'Bạn có thể xem lại hướng dẫn này bất cứ lúc nào bằng nút này. Chúc bạn làm việc hiệu quả!',
+            side: "left", align: 'center'
+          }
+        }
+      ]
+    });
+    driverObj.drive();
+  }
+
+  if (tourBtn) {
+    tourBtn.addEventListener('click', startTour);
+  }
+
+  // Chạy Tour 1 lần duy nhất cho User mới (chỉ chạy trên PC)
+  const hasSeenTour = localStorage.getItem('hasSeenTour');
+  if (!hasSeenTour && window.innerWidth >= 768) {
+    setTimeout(() => {
+      startTour();
+      localStorage.setItem('hasSeenTour', 'true');
+    }, 1000);
   }
 
 });

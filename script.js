@@ -4151,11 +4151,43 @@ This is a fully client-side application. Your content never leaves your browser 
           }
         },
         {
+          element: '#open-vault-btn',
+          popover: {
+            title: 'Kết nối Thư mục (Vault) 📂',
+            description: 'Tính năng cực mạnh! Cấp quyền cho trình duyệt đọc/ghi trực tiếp vào một thư mục trên máy tính của bạn. Giống hệt cách Obsidian hoạt động!',
+            side: "right", align: 'start'
+          }
+        },
+        {
           element: '.sidebar',
           popover: {
-            title: 'Quản lý File Local 📁',
-            description: 'Toàn bộ tài liệu của bạn được lưu an toàn tuyệt đối ngay trên trình duyệt (LocalFirst). Không có bất kỳ dữ liệu nào gửi lên Server lạ.',
+            title: 'Quản lý File Local 🗂️',
+            description: 'Toàn bộ cây thư mục và tài liệu của bạn sẽ hiển thị ở đây. An toàn tuyệt đối, không có bất kỳ dữ liệu nào gửi lên Server lạ.',
             side: "right", align: 'start'
+          }
+        },
+        {
+          element: '.tab-bar',
+          popover: {
+            title: 'Hệ thống Đa Tab 📑',
+            description: 'Mở nhiều file cùng lúc, chuyển đổi siêu tốc giống hệt VS Code!',
+            side: "bottom", align: 'start'
+          }
+        },
+        {
+          element: '#tag-filter-btn',
+          popover: {
+            title: 'Lọc bài viết theo Tag 🏷️',
+            description: 'Chỉ cần gõ #tag vào bài viết, hệ thống sẽ tự động gom nhóm và giúp bạn lọc file cực nhanh ở đây.',
+            side: "bottom", align: 'end'
+          }
+        },
+        {
+          element: '#tab-reset-btn',
+          popover: {
+            title: 'Reset Toàn bộ 🗑️',
+            description: 'Nếu muốn dọn dẹp sạch sẽ toàn bộ Cache hiện tại để làm lại từ đầu, hãy bấm nút này.',
+            side: "bottom", align: 'end'
           }
         },
         {

@@ -4260,10 +4260,26 @@ This is a fully client-side application. Your content never leaves your browser 
           }
         },
         {
+          element: '.view-mode-group',
+          popover: {
+            title: 'Chế độ Hiển thị 🪟',
+            description: 'Chỉ Code, Chia đôi, hoặc Chỉ xem. Bấm nút Hide (mũi tên lên) ẩn thanh công cụ để tập trung tối đa.',
+            side: "bottom", align: 'center'
+          }
+        },
+        {
           element: '#toggle-sync',
           popover: {
             title: 'Đồng bộ Cuộn trang ↕️',
             description: 'Tính năng cuộn đồng thời Editor và Preview cực mượt, giúp bạn không bao giờ bị lạc dòng.',
+            side: "bottom", align: 'start'
+          }
+        },
+        {
+          element: '#exportDropdown',
+          popover: {
+            title: 'Xuất / Nhập Đa dạng 📥',
+            description: 'Hỗ trợ xuất sang HTML, PDF, Markdown hoặc Backup tải toàn bộ File (JSON) về máy.',
             side: "bottom", align: 'start'
           }
         },
@@ -4289,22 +4305,6 @@ This is a fully client-side application. Your content never leaves your browser 
             title: 'Lịch sử Phiên bản ⏱️',
             description: 'Lỡ tay xoá nhầm? Đừng lo! Hệ thống tự động lưu lại các mốc thời gian để bạn dễ dàng phục hồi lại bản nháp cũ.',
             side: "bottom", align: 'end'
-          }
-        },
-        {
-          element: '.view-mode-group',
-          popover: {
-            title: 'Chế độ Hiển thị 🪟',
-            description: 'Chỉ Code, Chia đôi, hoặc Chỉ xem. Bấm nút Hide (mũi tên lên) ẩn thanh công cụ để tập trung tối đa.',
-            side: "bottom", align: 'center'
-          }
-        },
-        {
-          element: '#exportDropdown',
-          popover: {
-            title: 'Xuất / Nhập Đa dạng 📥',
-            description: 'Hỗ trợ xuất sang HTML, PDF, Markdown hoặc Backup tải toàn bộ File (JSON) về máy.',
-            side: "bottom", align: 'start'
           }
         },
         {

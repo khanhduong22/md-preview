@@ -4175,7 +4175,7 @@ This is a fully client-side application. Your content never leaves your browser 
           }
         },
         {
-          element: '.sidebar',
+          element: '.sidebar-explorer',
           popover: {
             title: 'Quản lý File Local 🗂️',
             description: 'Toàn bộ cây thư mục và tài liệu của bạn sẽ hiển thị ở đây. An toàn tuyệt đối, không có bất kỳ dữ liệu nào gửi lên Server lạ.',

@@ -1401,14 +1401,14 @@ This is a fully client-side application. Your content never leaves your browser 
     });
   });
 
-  async function saveCurrentTabState() {
+  async function saveCurrentTabState(forceVaultSave = false) {
     const tab = tabs.find(function(t) { return t.id === activeTabId; });
     if (!tab) return;
     tab.content = markdownEditor.value;
     tab.scrollPos = markdownEditor.scrollTop;
     tab.viewMode = currentViewMode || 'split';
     
-    if (tab.handle) {
+    if (tab.handle && forceVaultSave === true) {
       try {
         const writable = await tab.handle.createWritable();
         await writable.write(tab.content);
@@ -1419,7 +1419,7 @@ This is a fully client-side application. Your content never leaves your browser 
       } catch(e) {
         console.error('Failed to write cleanly to vault:', e);
       }
-    } else {
+    } else if (!tab.handle) {
       saveTabsToStorage(tabs);
     }
   }
@@ -1431,7 +1431,7 @@ This is a fully client-side application. Your content never leaves your browser 
 
   async function switchTab(tabId) {
     if (tabId === activeTabId && !localVaultMode) return;
-    await saveCurrentTabState();
+    await saveCurrentTabState(true);
     activeTabId = tabId;
     saveActiveTabId(activeTabId);
     const tab = tabs.find(function(t) { return t.id === tabId; });
@@ -1459,6 +1459,7 @@ This is a fully client-side application. Your content never leaves your browser 
     if (content === undefined) content = '';
     if (!title) title = nextUntitledTitle();
     const tab = createTab(content, title);
+    tab.createdAt = Date.now(); // Track creation time for auto-save feature
     tabs.push(tab);
     switchTab(tab.id);
     markdownEditor.focus();
@@ -1545,7 +1546,7 @@ This is a fully client-side application. Your content never leaves your browser 
   function duplicateTab(tabId) {
     const tab = tabs.find(function(t) { return t.id === tabId; });
     if (!tab) return;
-    saveCurrentTabState();
+    saveCurrentTabState(true);
     const dupTitle = tab.title + ' (copy)';
     const dup = createTab(tab.content, dupTitle, tab.viewMode);
     if (tab.groupId) dup.groupId = tab.groupId;
@@ -3247,7 +3248,7 @@ This is a fully client-side application. Your content never leaves your browser 
       const currentTab = tabs.find(t => t.id === activeTabId);
       if (localVaultMode && vaultDirHandle && currentTab) {
         if (currentTab.handle) {
-          await saveCurrentTabState();
+          await saveCurrentTabState(true);
           const exportBtn = document.getElementById('exportDropdown');
           if (exportBtn) {
              const origHtml = exportBtn.innerHTML;
@@ -4372,5 +4373,51 @@ This is a fully client-side application. Your content never leaves your browser 
       localStorage.setItem('hasSeenTour', 'true');
     }, 1000);
   }
+
+  // ========================================
+  // VAULT AUTO-SAVE MANAGER
+  // ========================================
+  setInterval(async () => {
+    if (!localVaultMode || !vaultDirHandle) return;
+    const currentTab = tabs.find(t => t.id === activeTabId);
+    if (!currentTab) return;
+    
+    if (currentTab.handle) {
+      // 1.5 minutes vault auto-save
+      if (!currentTab.lastVaultSave) currentTab.lastVaultSave = Date.now();
+      if (Date.now() - currentTab.lastVaultSave >= 90000) {
+         await saveCurrentTabState(true);
+         currentTab.lastVaultSave = Date.now();
+         console.log("Vault file auto-saved");
+      }
+    } else {
+      // Virtual file in vault mode: open for >= 5 minutes -> auto save
+      if (!currentTab.createdAt) currentTab.createdAt = Date.now();
+      if (Date.now() - currentTab.createdAt >= 300000) { // 5 minutes
+         try {
+           let safeName = currentTab.title.replace(/[\\/:*?"<>|]/g, '-');
+           if (!safeName.endsWith('.md')) safeName += '.md';
+           
+           let fileHandle;
+           try {
+             fileHandle = await vaultDirHandle.getFileHandle(safeName, { create: false });
+             safeName = safeName.replace('.md', '_' + Date.now() + '.md');
+             fileHandle = await vaultDirHandle.getFileHandle(safeName, { create: true });
+           } catch(e) {
+             fileHandle = await vaultDirHandle.getFileHandle(safeName, { create: true });
+           }
+           
+           currentTab.handle = fileHandle;
+           currentTab.id = vaultDirHandle.name + '/' + safeName;
+           currentTab.lastVaultSave = Date.now();
+           await saveCurrentTabState(true);
+           if (typeof renderVaultTree === 'function') renderVaultTree();
+           console.log("Virtual file auto-saved to vault after 5 minutes");
+         } catch(e) {
+           console.error('Auto save virtual file to vault failed', e);
+         }
+      }
+    }
+  }, 30000); // Check every 30 seconds
 
 });

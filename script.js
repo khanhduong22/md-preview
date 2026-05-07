@@ -4126,6 +4126,15 @@ This is a fully client-side application. Your content never leaves your browser 
   // --- Guided Tour (Driver.js) ---
   function startTour() {
     if (!window.driver) return;
+    
+    // Tạm ẩn privacy banner để không làm lệch vị trí popover
+    const privacyNotice = document.getElementById('privacy-notice');
+    const privacyDismiss = document.getElementById('privacy-dismiss');
+    if (privacyNotice && privacyNotice.style.display !== 'none') {
+      if (privacyDismiss) privacyDismiss.click();
+      else privacyNotice.style.display = 'none';
+    }
+
     const driverObj = window.driver.js.driver({
       showProgress: true,
       animate: true,

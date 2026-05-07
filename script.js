@@ -1548,29 +1548,48 @@ This is a fully client-side application. Your content never leaves your browser 
     const modal = document.getElementById('reset-confirm-modal');
     const confirmBtn = document.getElementById('reset-modal-confirm');
     const cancelBtn = document.getElementById('reset-modal-cancel');
+    const title = document.getElementById('reset-modal-title');
     if (!modal) return;
+    
+    if (localVaultMode) {
+      title.textContent = "Close all tabs? (Local files will NOT be deleted)";
+      confirmBtn.textContent = "Close All";
+    } else {
+      title.textContent = "Are you sure you want to delete all virtual files and reset to default?";
+      confirmBtn.textContent = "Delete & Reset";
+    }
+    
     modal.style.display = 'flex';
 
     function doReset() {
       modal.style.display = 'none';
       cleanup();
       tabs = [];
+      tabGroups = [];
+      saveGroups();
       untitledCounter = 0;
       saveUntitledCounter(0);
-      const welcome = createTab(sampleMarkdown, 'Welcome to Markdown');
-      tabs.push(welcome);
       
-      if (typeof demo30ChartsMarkdown !== 'undefined') {
-        const demoGroup = createGroup('demo', 'purple');
-        const demoTab = createTab(demo30ChartsMarkdown, '30 chart');
-        demoTab.groupId = demoGroup.id;
-        tabs.push(demoTab);
+      if (!localVaultMode) {
+        const welcome = createTab(sampleMarkdown, 'Welcome to Markdown');
+        tabs.push(welcome);
+        
+        if (typeof demo30ChartsMarkdown !== 'undefined') {
+          const demoGroup = createGroup('demo', 'purple');
+          const demoTab = createTab(demo30ChartsMarkdown, '30 chart');
+          demoTab.groupId = demoGroup.id;
+          tabs.push(demoTab);
+        }
+        
+        activeTabId = welcome.id;
+        markdownEditor.value = sampleMarkdown;
+      } else {
+        activeTabId = null;
+        markdownEditor.value = '';
       }
       
-      activeTabId = welcome.id;
       saveActiveTabId(activeTabId);
       saveTabsToStorage(tabs);
-      markdownEditor.value = sampleMarkdown;
       restoreViewMode('split');
       renderMarkdown();
       renderTabBar(tabs, activeTabId);

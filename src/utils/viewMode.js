@@ -277,17 +277,7 @@ export function resetPaneWidths() {
   previewPaneElement.style.flex = "";
 }
 
-export function toggleFocusMode() {
-  isFocusMode = !isFocusMode;
-  if (isFocusMode) {
-    document.body.classList.add("focus-mode");
-  } else {
-    document.body.classList.remove("focus-mode");
-  }
-}
 
-if (focusModeBtn) focusModeBtn.addEventListener("click", toggleFocusMode);
-if (exitFocusBtn) exitFocusBtn.addEventListener("click", toggleFocusMode);
 
 import { editorPane, previewPane, toggleSyncButton } from "../core/dom.js";
 import { saveCurrentTabState } from "../core/tabs.js";

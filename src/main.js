@@ -6,6 +6,7 @@ import { initViewModeUI } from "./utils/viewMode.js";
 import { bootstrapApp } from "./core/app.js";
 import { initMarkdownParser } from "./core/markdown.js";
 import { initTour } from "./utils/tour.js";
+import { initFocusMode } from "./utils/focusMode.js";
 import { initAutoSave } from "./core/autosave.js";
 import { sampleMarkdown } from "./utils/sample.js";
 import { markdownEditor } from "./core/dom.js";
@@ -21,5 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initViewModeUI();
   bootstrapApp();
   initAutoSave();
+  initFocusMode();
   initTour();
 });

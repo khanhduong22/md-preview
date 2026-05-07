@@ -1559,6 +1559,14 @@ This is a fully client-side application. Your content never leaves your browser 
       saveUntitledCounter(0);
       const welcome = createTab(sampleMarkdown, 'Welcome to Markdown');
       tabs.push(welcome);
+      
+      if (typeof demo30ChartsMarkdown !== 'undefined') {
+        const demoGroup = createGroup('demo', 'purple');
+        const demoTab = createTab(demo30ChartsMarkdown, '30 chart');
+        demoTab.groupId = demoGroup.id;
+        tabs.push(demoTab);
+      }
+      
       activeTabId = welcome.id;
       saveActiveTabId(activeTabId);
       saveTabsToStorage(tabs);
@@ -1601,6 +1609,14 @@ This is a fully client-side application. Your content never leaves your browser 
       if (tabs.length === 0) {
         const tab = createTab(sampleMarkdown, 'Welcome to Markdown');
         tabs.push(tab);
+        
+        if (typeof demo30ChartsMarkdown !== 'undefined') {
+          const demoGroup = createGroup('demo', 'purple');
+          const demoTab = createTab(demo30ChartsMarkdown, '30 chart');
+          demoTab.groupId = demoGroup.id;
+          tabs.push(demoTab);
+        }
+        
         activeTabId = tab.id;
         saveTabsToStorage(tabs);
         saveActiveTabId(activeTabId);

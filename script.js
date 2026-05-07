@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // View Mode State - Story 1.1
   let currentViewMode = 'split'; // 'editor', 'split', or 'preview'
+  let isSplitReversed = false;
 
   const markdownEditor = document.getElementById("markdown-editor");
   const markdownPreview = document.getElementById("markdown-preview");
@@ -1880,14 +1881,23 @@ This is a fully client-side application. Your content never leaves your browser 
   // View Mode Functions - Story 1.1 & 1.2
   function setViewMode(mode) {
     if (!mode || !['editor', 'split', 'preview'].includes(mode)) return;
+    
+    if (mode === 'split' && currentViewMode === 'split') {
+      isSplitReversed = !isSplitReversed;
+      contentContainer.classList.remove('view-editor-only', 'view-preview-only', 'view-split', 'view-split-reversed');
+      contentContainer.classList.add(isSplitReversed ? 'view-split-reversed' : 'view-split');
+      applyPaneWidths();
+      return;
+    }
+
     if (mode === currentViewMode) return;
 
     const previousMode = currentViewMode;
     currentViewMode = mode;
 
     // Update content container class
-    contentContainer.classList.remove('view-editor-only', 'view-preview-only', 'view-split');
-    contentContainer.classList.add('view-' + (mode === 'editor' ? 'editor-only' : mode === 'preview' ? 'preview-only' : 'split'));
+    contentContainer.classList.remove('view-editor-only', 'view-preview-only', 'view-split', 'view-split-reversed');
+    contentContainer.classList.add(mode === 'editor' ? 'view-editor-only' : mode === 'preview' ? 'view-preview-only' : (isSplitReversed ? 'view-split-reversed' : 'view-split'));
 
     // Update button active states (desktop)
     viewModeButtons.forEach(btn => {
@@ -1991,7 +2001,11 @@ This is a fully client-side application. Your content never leaves your browser 
     // Enforce minimum pane widths
     newEditorPercent = Math.max(MIN_PANE_PERCENT, Math.min(100 - MIN_PANE_PERCENT, newEditorPercent));
 
-    editorWidthPercent = newEditorPercent;
+    if (isSplitReversed) {
+      editorWidthPercent = 100 - newEditorPercent;
+    } else {
+      editorWidthPercent = newEditorPercent;
+    }
     applyPaneWidths();
   }
 
@@ -2005,7 +2019,11 @@ This is a fully client-side application. Your content never leaves your browser 
     let newEditorPercent = (touchX / containerWidth) * 100;
     newEditorPercent = Math.max(MIN_PANE_PERCENT, Math.min(100 - MIN_PANE_PERCENT, newEditorPercent));
 
-    editorWidthPercent = newEditorPercent;
+    if (isSplitReversed) {
+      editorWidthPercent = 100 - newEditorPercent;
+    } else {
+      editorWidthPercent = newEditorPercent;
+    }
     applyPaneWidths();
   }
 

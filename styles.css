@@ -1098,8 +1098,14 @@ a:focus {
 }
 
 .content-container.view-split .editor-pane,
-.content-container.view-split .preview-pane {
+.content-container.view-split .preview-pane,
+.content-container.view-split-reversed .editor-pane,
+.content-container.view-split-reversed .preview-pane {
   flex: 1;
+}
+
+.content-container.view-split-reversed {
+  flex-direction: row-reverse;
 }
 
 /* Responsive adjustments for view mode buttons */
@@ -1278,8 +1284,14 @@ a:focus {
   }
 
   .content-container.view-split .editor-pane,
-  .content-container.view-split .preview-pane {
+  .content-container.view-split .preview-pane,
+  .content-container.view-split-reversed .editor-pane,
+  .content-container.view-split-reversed .preview-pane {
     height: 50%;
+  }
+  
+  .content-container.view-split-reversed {
+    flex-direction: column-reverse;
   }
 }
 

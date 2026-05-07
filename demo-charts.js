@@ -1,4 +1,4 @@
-const demo30ChartsMarkdown = `# Project Master Overview: App Master
+export const demo30ChartsMarkdown = `# Project Master Overview: App Master
 
 Tài liệu này là "Single Source of Truth" (Nguồn chân lý duy nhất) tổng hợp toàn bộ kiến trúc, luồng hoạt động và thiết kế cơ sở dữ liệu của dự án.
 Dùng file này làm **Template Chuẩn** cho các dự án sau: mọi người mới vào chỉ cần đọc 1 file duy nhất là hiểu từ Use Case, Cấu trúc hệ thống đến Flow chạy thực tế.

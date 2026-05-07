@@ -1,5 +1,4 @@
 import { updateMobileStats } from "./mobile.js";
-
 import {
   markdownEditor,
   previewPane,
@@ -12,6 +11,11 @@ import {
   initMermaidZoomModal,
   addMermaidToolbars,
 } from "../utils/mermaidTools.js";
+import { initMermaid } from "./markdown.js";
+
+const markdownPreview = document.getElementById('markdown-preview');
+let markdownRenderTimeout = null;
+const RENDER_DELAY = 150;
 
 export function renderMarkdown() {
   try {
@@ -68,9 +72,6 @@ export function renderMarkdown() {
   }
 }
 
-// --- Removed Import ---
-
-// --- Removed Emojis ---
 export function debouncedRender() {
   clearTimeout(markdownRenderTimeout);
   markdownRenderTimeout = setTimeout(renderMarkdown, RENDER_DELAY);
@@ -80,19 +81,11 @@ export function updateDocumentStats() {
   const text = markdownEditor.value;
 
   const charCount = text.length;
-  charCountElement.textContent = charCount.toLocaleString();
+  if (charCountElement) charCountElement.textContent = charCount.toLocaleString();
 
   const wordCount = text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
-  wordCountElement.textContent = wordCount.toLocaleString();
+  if (wordCountElement) wordCountElement.textContent = wordCount.toLocaleString();
 
   const readingTimeMinutes = Math.ceil(wordCount / 200);
-  readingTimeElement.textContent = readingTimeMinutes;
+  if (readingTimeElement) readingTimeElement.textContent = readingTimeMinutes;
 }
-
-// View Mode Functions - Story 1.1 & 1.2
-
-// Story 1.2: Update sync toggle visibility
-
-// Story 1.3: Resize Divider Functions
-
-// --- Removed Mobile ---

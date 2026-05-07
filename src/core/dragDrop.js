@@ -1,18 +1,23 @@
-import { importMarkdownFile } from './dom.js';
+import { importMarkdownFile } from '../utils/import.js';
+
 const dropzone = document.getElementById("dropzone");
 const closeDropzoneBtn = document.getElementById("close-dropzone");
+const fileInput = document.getElementById("file-input");
+
 export function initDragDrop() {
-function preventDefaults(e) {
+  if (!dropzone) return;
+
+  function preventDefaults(e) {
     e.preventDefault();
     e.stopPropagation();
   }
 
   ["dragenter", "dragover"].forEach((eventName) => {
-    dropzone?.addEventListener(eventName, highlight, false);
+    dropzone.addEventListener(eventName, highlight, false);
   });
 
   ["dragleave", "drop"].forEach((eventName) => {
-    dropzone?.addEventListener(eventName, unhighlight, false);
+    dropzone.addEventListener(eventName, unhighlight, false);
   });
 
   function highlight() {
@@ -23,16 +28,18 @@ function preventDefaults(e) {
     dropzone.classList.remove("active");
   }
 
-  dropzone?.addEventListener("drop", handleDrop, false);
-  dropzone?.addEventListener("click", function (e) {
-    if (e.target !== closeDropzoneBtn && !closeDropzoneBtn.contains(e.target)) {
-      fileInput.click();
+  dropzone.addEventListener("drop", handleDrop, false);
+  dropzone.addEventListener("click", function (e) {
+    if (closeDropzoneBtn && e.target !== closeDropzoneBtn && !closeDropzoneBtn.contains(e.target)) {
+      if (fileInput) fileInput.click();
     }
   });
-  closeDropzoneBtn?.addEventListener("click", function(e) {
-    e.stopPropagation(); 
-    dropzone.style.display = "none";
-  });
+  if (closeDropzoneBtn) {
+    closeDropzoneBtn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      dropzone.style.display = "none";
+    });
+  }
 
   function handleDrop(e) {
     const dt = e.dataTransfer;
@@ -50,6 +57,4 @@ function preventDefaults(e) {
       }
     }
   }
-
-  
 }

@@ -3,6 +3,7 @@ import {
   saveTabsToStorage,
   saveActiveTabId,
   renderTabBar,
+  restoreViewMode,
   loadGroups,
   loadUntitledCounter,
   loadTabsFromStorage,
@@ -17,6 +18,13 @@ import { AppState } from "./state.js";
 import { renderMarkdown } from "./render.js";
 import { markdownEditor } from "./dom.js";
 import { initMobile } from "./mobile.js";
+import { initShortcuts, initExtraShortcuts } from "./shortcuts.js";
+import { initDragDrop } from "./dragDrop.js";
+import { initExportSetup, initExportEvents, initPdfExportEvent } from "../utils/export.js";
+import { initBackupSetup } from "../utils/backup.js";
+import { initTagsSetup } from "../utils/tags.js";
+import { initShare } from "../utils/share.js";
+import '../utils/search.js';
 
 const STORAGE_KEY = "markdownViewerTabs";
 const ACTIVE_TAB_KEY = "markdownViewerActiveTab";
@@ -107,4 +115,13 @@ export async function bootstrapApp() {
   });
   renderTabBar(AppState.tabs, AppState.activeTabId);
   initMobile();
+  initShortcuts();
+  initExtraShortcuts();
+  initDragDrop();
+  initExportSetup();
+  initExportEvents();
+  initPdfExportEvent();
+  initBackupSetup();
+  initTagsSetup();
+  initShare();
 }

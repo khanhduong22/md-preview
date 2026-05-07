@@ -1,6 +1,5 @@
 
-export function initMarkdownParser() {
-  const initMermaid = () => {
+export function initMermaid() {
   const currentTheme = document.documentElement.getAttribute("data-theme");
   const mermaidTheme = currentTheme === "dark" ? "dark" : "default";
 
@@ -11,7 +10,9 @@ export function initMarkdownParser() {
     flowchart: { useMaxWidth: true, htmlLabels: true },
     fontSize: 16,
   });
-};
+}
+
+export function initMarkdownParser() {
 
 try {
   initMermaid();

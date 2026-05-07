@@ -31,7 +31,6 @@ function decodeMarkdownFromShare(encoded) {
   let base64 = decodeURIComponent(encoded)
     .replace(/-/g, "+")
     .replace(/_/g, "/");
-  // Add missing padding to prevent atob InvalidCharacterError in some browsers
   while (base64.length % 4) {
     base64 += "=";
   }
@@ -77,7 +76,7 @@ function copyShareUrl(btn) {
       .writeText(shareUrl)
       .then(onCopied)
       .catch(() => {
-        // clipboard.writeText failed; nothing further to do in secure context
+        // clipboard.writeText failed
       });
   } else {
     try {
@@ -94,17 +93,32 @@ function copyShareUrl(btn) {
   }
 }
 
-shareButton.addEventListener("click", function () {
-  copyShareUrl(shareButton);
-});
-mobileShareButton.addEventListener("click", function () {
-  copyShareUrl(mobileShareButton);
-});
+export function initShare() {
+  const shareButton = document.getElementById("share-button");
+  const mobileShareButton = document.getElementById("mobile-share-button");
+
+  if (shareButton) {
+    shareButton.addEventListener("click", function () {
+      copyShareUrl(shareButton);
+    });
+  }
+  if (mobileShareButton) {
+    mobileShareButton.addEventListener("click", function () {
+      copyShareUrl(mobileShareButton);
+    });
+  }
+
+  // Handle hash changes if the user clicks a share link while the app is already open
+  window.addEventListener("hashchange", () => {
+    if (window.location.hash.startsWith("#share=")) {
+      loadFromShareHashChange();
+    }
+  });
+}
 
 /**
  * Extract and decode share hash from the URL.
  * Returns the decoded markdown string, or null if no share hash is present.
- * This is a pure decoder — it does NOT touch the editor or AppState.tabs.
  */
 function decodeShareHash() {
   if (typeof pako === "undefined") {
@@ -118,7 +132,6 @@ function decodeShareHash() {
   if (hash.startsWith("#share=")) {
     encoded = hash.slice("#share=".length);
   } else {
-    // Fallback for percent-encoded hashes or mangled URLs by chat apps
     const href = window.location.href;
     const shareMatch = href.match(/(?:#|%23)share=([^&?]*)/);
     if (shareMatch) {
@@ -128,7 +141,6 @@ function decodeShareHash() {
 
   if (!encoded) return null;
 
-  // Remove any trailing tracking parameters or garbage added by social apps
   const validMatch = encoded.match(/^[A-Za-z0-9\-_]+/);
   if (validMatch) {
     encoded = validMatch[0];
@@ -149,7 +161,6 @@ function decodeShareHash() {
 
 /**
  * Handle share hash changes when the app is already open.
- * Creates a new tab with the shared content.
  */
 function loadFromShareHashChange() {
   const shareContent = decodeShareHash();
@@ -165,12 +176,5 @@ function loadFromShareHashChange() {
   saveActiveTabId(AppState.activeTabId);
   renderTabBar(AppState.tabs, AppState.activeTabId);
 }
-
-// Handle hash changes if the user clicks a share link while the app is already open
-window.addEventListener("hashchange", () => {
-  if (window.location.hash.startsWith("#share=")) {
-    loadFromShareHashChange();
-  }
-});
 
 export { decodeShareHash };

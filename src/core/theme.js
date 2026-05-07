@@ -1,3 +1,4 @@
+import { renderMarkdown } from "./render.js";
 const themeToggle = document.getElementById("theme-toggle");
 const root = document.documentElement;
 export let isDarkTheme = false;

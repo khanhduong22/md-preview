@@ -1,11 +1,11 @@
-import { markdownEditor } from '../core/dom.js';
+import { newTab } from '../core/tabs.js';
+
 export function importMarkdownFile(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
       newTab(e.target.result, file.name.replace(/\.md$/i, ''));
-      dropzone.style.display = "none";
+      const dropzone = document.getElementById("dropzone");
+      if (dropzone) dropzone.style.display = "none";
     };
     reader.readAsText(file);
   }
-
-  

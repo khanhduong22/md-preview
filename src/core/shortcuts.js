@@ -1,10 +1,17 @@
 import { toggleSyncScrolling, currentViewMode } from "../utils/viewMode.js";
-import { newTab, closeTab } from "./tabs.js";
+import { newTab, closeTab, resetAllTabs, renderTabBar, saveCurrentTabState } from "./tabs.js";
 import { AppState } from "./state.js";
+import { markdownEditor } from "./dom.js";
+import { renderVaultTree } from "./vault.js";
+import { closeMermaidModal } from "../utils/mermaidTools.js";
+
 export function initShortcuts() {
-document.getElementById('tab-reset-btn').addEventListener('click', function() {
-    resetAllTabs();
-  });
+  const tabResetBtn = document.getElementById('tab-reset-btn');
+  if (tabResetBtn) {
+    tabResetBtn.addEventListener('click', function() {
+      resetAllTabs();
+    });
+  }
   
   const logoHome = document.getElementById('logo-home');
   if (logoHome) {
@@ -12,23 +19,10 @@ document.getElementById('tab-reset-btn').addEventListener('click', function() {
       resetAllTabs();
     });
   }
-
-  // ========================================
-  // MERMAID DIAGRAM TOOLBAR
-  // ========================================
-
-  /**
-   * Serialises an SVG element to a data URL suitable for use as an image source.
-   * Inline styles and dimensions are preserved so the PNG matches the rendered diagram.
-   */
-  
-// --- Removed Block ---
-
-// --- Removed Focus Mode ---
-
 }
+
 export function initExtraShortcuts() {
-document.addEventListener("keydown", async function (e) {
+  document.addEventListener("keydown", async function (e) {
     if ((e.ctrlKey || e.metaKey) && e.key === "s") {
       e.preventDefault();
       
@@ -60,7 +54,7 @@ document.addEventListener("keydown", async function (e) {
               await writable.close();
               
               currentTab.handle = fileHandle;
-              currentTab.title = name.replace(/\\.md$/i, '');
+              currentTab.title = name.replace(/\.md$/i, '');
               currentTab.id = '/' + name;
               
               renderTabBar(AppState.tabs, AppState.activeTabId);
@@ -78,7 +72,8 @@ document.addEventListener("keydown", async function (e) {
           }
         }
       } else {
-        exportMd.click();
+        const exportMd = document.getElementById("export-md");
+        if (exportMd) exportMd.click();
       }
     }
     if ((e.ctrlKey || e.metaKey) && e.key === "c") {
@@ -87,10 +82,10 @@ document.addEventListener("keydown", async function (e) {
       const hasSelection = window.getSelection && window.getSelection().toString().trim().length > 0;
       if (!isTextControl && !hasSelection) {
         e.preventDefault();
-        copyMarkdownButton.click();
+        const copyMarkdownButton = document.getElementById("copy-markdown-button");
+        if (copyMarkdownButton) copyMarkdownButton.click();
       }
     }
-    // Story 1.2: Only allow sync toggle shortcut when in split view
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "S") {
       e.preventDefault();
       if (currentViewMode === 'split') {
@@ -112,6 +107,4 @@ document.addEventListener("keydown", async function (e) {
       closeMermaidModal();
     }
   });
-
-  
 }

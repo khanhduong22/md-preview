@@ -1604,6 +1604,13 @@ This is a fully client-side application. Your content never leaves your browser 
       restoreViewMode('split');
       renderMarkdown();
       renderTabBar(tabs, activeTabId);
+      
+      // Force clean URL hash (remove #share=...)
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.pathname);
+      } else {
+        window.location.hash = '';
+      }
     }
 
     function doCancel() {

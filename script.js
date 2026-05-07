@@ -58,6 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const mobileExportPdf     = document.getElementById("mobile-export-pdf");
   const mobileCopyMarkdown  = document.getElementById("mobile-copy-markdown");
   const mobileThemeToggle   = document.getElementById("mobile-theme-toggle");
+  const mobileToggleVault   = document.getElementById("mobile-toggle-vault");
   const shareButton         = document.getElementById("share-button");
   const tourBtn             = document.getElementById("tour-btn");
   const mobileShareButton   = document.getElementById("mobile-share-button");
@@ -2066,6 +2067,14 @@ This is a fully client-side application. Your content never leaves your browser 
   mobileMenuToggle.addEventListener("click", openMobileMenu);
   mobileCloseMenu.addEventListener("click", closeMobileMenu);
   mobileMenuOverlay.addEventListener("click", closeMobileMenu);
+  
+  if (mobileToggleVault) {
+    mobileToggleVault.addEventListener("click", () => {
+      const sidebar = document.getElementById("sidebar-explorer");
+      sidebar.classList.toggle("mobile-active");
+      closeMobileMenu();
+    });
+  }
 
   function updateMobileStats() {
     mobileCharCount.textContent   = charCountElement.textContent;

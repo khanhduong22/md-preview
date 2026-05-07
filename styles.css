@@ -462,6 +462,22 @@ body.focus-mode .header-reveal-zone {
 
 /* Responsive design for mobile */
 @media (max-width: 1080px) {
+  .sidebar-explorer {
+    display: none;
+    position: absolute;
+    height: 100%;
+    z-index: 1000;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .sidebar-explorer.mobile-active {
+    display: flex !important;
+  }
+  
+  .sidebar-resizer {
+    display: none !important;
+  }
+
   .content-container {
       flex-direction: column;
   }

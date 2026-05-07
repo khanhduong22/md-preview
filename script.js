@@ -139,6 +139,14 @@ document.addEventListener("DOMContentLoaded", function () {
     return `<pre><code class="hljs ${validLanguage}">${highlightedCode}</code></pre>`;
   };
 
+  renderer.link = function(href, title, text) {
+    const link = marked.Renderer.prototype.link.call(this, href, title, text);
+    if (href && !href.startsWith('#')) {
+      return link.replace('<a ', '<a target="_blank" rel="noopener noreferrer" ');
+    }
+    return link;
+  };
+
   marked.setOptions({
     ...markedOptions,
     renderer: renderer,

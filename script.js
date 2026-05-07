@@ -3328,6 +3328,13 @@ This is a fully client-side application. Your content never leaves your browser 
   document.getElementById('tab-reset-btn').addEventListener('click', function() {
     resetAllTabs();
   });
+  
+  const logoHome = document.getElementById('logo-home');
+  if (logoHome) {
+    logoHome.addEventListener('click', function() {
+      resetAllTabs();
+    });
+  }
 
   // ========================================
   // MERMAID DIAGRAM TOOLBAR

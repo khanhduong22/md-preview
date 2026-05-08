@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:visual": "playwright test"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,7 @@
   },
   "homepage": "https://github.com/khanhduong22/md-preview#readme",
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "vite": "^8.0.10"
   }
 }

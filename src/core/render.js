@@ -40,7 +40,10 @@ export function renderMarkdown() {
             node.innerHTML = node.innerHTML.replace(/\\n/g, "<br/>");
           }
         });
-        Promise.resolve(mermaid.init(undefined, mermaidNodes))
+        mermaid.run({
+          nodes: Array.from(mermaidNodes),
+          suppressErrors: true
+        })
           .then(() => addMermaidToolbars())
           .catch((e) => {
             console.warn("Mermaid rendering failed:", e);

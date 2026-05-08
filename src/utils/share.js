@@ -2,7 +2,8 @@
 import { markdownEditor } from '../core/dom.js';
 import { renderMarkdown } from '../core/render.js';
 import { AppState } from '../core/state.js';
-import { createTab, saveTabsToStorage, saveActiveTabId, renderTabBar, restoreViewMode } from '../core/tabs.js';
+import { createTab, saveTabsToStorage, saveActiveTabId, renderTabBar } from '../core/tabs.js';
+import { restoreViewMode } from './viewMode.js';
 import { saveShareSnapshot } from '../core/history.js';
 
 // ============================================

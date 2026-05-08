@@ -3,7 +3,7 @@ import { AppState } from './state.js';
 import { renderVaultTree } from './vault.js';
 import { markdownEditor } from './dom.js';
 import { renderMarkdown } from './render.js';
-import { syncEditorToPreview } from '../utils/viewMode.js';
+import { syncEditorToPreview, currentViewMode, restoreViewMode } from '../utils/viewMode.js';
 
   export async function loadTabsFromStorage() {
     try {
@@ -610,11 +610,6 @@ import { syncEditorToPreview } from '../utils/viewMode.js';
     } else if (!tab.handle) {
       saveTabsToStorage(AppState.tabs);
     }
-  }
-
-  export function restoreViewMode(mode) {
-    currentViewMode = null;
-    setViewMode(mode || 'split');
   }
 
   export async function switchTab(tabId) {

@@ -3,13 +3,13 @@ import {
   saveTabsToStorage,
   saveActiveTabId,
   renderTabBar,
-  restoreViewMode,
   loadGroups,
   loadUntitledCounter,
   loadTabsFromStorage,
   loadActiveTabId,
 } from "./tabs.js";
 import { initVault } from "./vault.js";
+import { restoreViewMode } from "../utils/viewMode.js";
 import { initHistory } from "./history.js";
 import { demo30ChartsMarkdown } from "../utils/demo-charts.js";
 import { sampleMarkdown } from "../utils/sample.js";

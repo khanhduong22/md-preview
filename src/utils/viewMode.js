@@ -167,6 +167,11 @@ export function setViewMode(mode) {
   }
 }
 
+export function restoreViewMode(mode) {
+  currentViewMode = null;
+  setViewMode(mode || 'split');
+}
+
 export function updateSyncToggleVisibility(mode) {
   const isSplitView = mode === "split";
 

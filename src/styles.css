@@ -422,6 +422,7 @@ body.focus-mode .header-reveal-zone {
 }
 
 .dropzone {
+  position: relative;
   border: 2px dashed var(--border-color);
   border-radius: 6px;
   padding: 20px;

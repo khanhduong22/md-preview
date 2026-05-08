@@ -66,16 +66,13 @@ export function initMobile() {
     mobileToggleSync.addEventListener("click", () => {
       toggleSyncScrolling();
       if (syncScrollingEnabled) {
-        mobileToggleSync.innerHTML =
-          '<i class="bi bi-link-45deg me-2"></i> Sync Off';
-        mobileToggleSync.classList.add("sync-disabled");
-        mobileToggleSync.classList.remove("sync-enabled");
-        mobileToggleSync.classList.add("border-primary");
-      } else {
-        mobileToggleSync.innerHTML = '<i class="bi bi-link me-2"></i> Sync On';
+        mobileToggleSync.innerHTML = '<i class="bi bi-link me-2"></i> On';
         mobileToggleSync.classList.add("sync-enabled");
-        mobileToggleSync.classList.remove("sync-disabled");
-        mobileToggleSync.classList.remove("border-primary");
+        mobileToggleSync.classList.remove("sync-disabled", "border-primary");
+      } else {
+        mobileToggleSync.innerHTML = '<i class="bi bi-link-45deg me-2"></i> Off';
+        mobileToggleSync.classList.add("sync-disabled", "border-primary");
+        mobileToggleSync.classList.remove("sync-enabled");
       }
     });
   }

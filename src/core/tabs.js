@@ -42,9 +42,9 @@ import { syncEditorToPreview, currentViewMode, restoreViewMode } from '../utils/
   }
 
   export function nextUntitledTitle() {
-    untitledCounter += 1;
-    saveUntitledCounter(untitledCounter);
-    return 'Untitled ' + untitledCounter;
+    AppState.untitledCounter = (AppState.untitledCounter || 0) + 1;
+    saveUntitledCounter(AppState.untitledCounter);
+    return 'Untitled ' + AppState.untitledCounter;
   }
 
   // ============================================
@@ -769,7 +769,7 @@ import { syncEditorToPreview, currentViewMode, restoreViewMode } from '../utils/
       AppState.tabs = [];
       AppState.tabGroups = [];
       saveGroups();
-      untitledCounter = 0;
+      AppState.untitledCounter = 0;
       saveUntitledCounter(0);
       
       if (!AppState.localVaultMode) {

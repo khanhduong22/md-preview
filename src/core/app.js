@@ -20,7 +20,7 @@ import { markdownEditor } from "./dom.js";
 import { initMobile } from "./mobile.js";
 import { initShortcuts, initExtraShortcuts } from "./shortcuts.js";
 import { initDragDrop } from "./dragDrop.js";
-import { initExportSetup, initExportEvents, initPdfExportEvent } from "../utils/export.js";
+import { initExportSetup, initExportEvents } from "../utils/export.js";
 import { initBackupSetup } from "../utils/backup.js";
 import { initTagsSetup } from "../utils/tags.js";
 import { initShare } from "../utils/share.js";
@@ -120,7 +120,6 @@ export async function bootstrapApp() {
   initDragDrop();
   initExportSetup();
   initExportEvents();
-  initPdfExportEvent();
   initBackupSetup();
   initTagsSetup();
   initShare();

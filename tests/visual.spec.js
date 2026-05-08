@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import fs from 'fs';
 
 test.describe('Visual Regression Testing', () => {
   test('trang chủ lúc mới vào (Light Mode)', async ({ page }) => {
@@ -15,13 +16,17 @@ test.describe('Visual Regression Testing', () => {
     });
 
     // 3. Chụp màn hình và so sánh! (Lần đầu chạy nó sẽ tự tạo file mẫu)
-    // - maxDiffPixels: cho phép lệch tối đa 100 pixel (do render khác nhau trên các máy)
-    // - mask: Che lại thanh cuộn (nếu có) để khỏi bị báo lỗi xàm
+    // - maxDiffPixels: cho phép lệch tối đa 100 pixel
     await expect(page).toHaveScreenshot('homepage-light-mode.png', {
       maxDiffPixels: 100,
-      fullPage: true, // Chụp toàn bộ trang, từ trên xuống dưới
       animations: 'disabled' // Đóng băng mọi animation để ảnh nhất quán
     });
+
+    // Đính kèm ảnh gốc (Baseline) vào Report để xem bằng tay
+    const snapshotPath = test.info().snapshotPath('homepage-light-mode.png');
+    if (fs.existsSync(snapshotPath)) {
+      await test.info().attach('Baseline Image', { path: snapshotPath, contentType: 'image/png' });
+    }
   });
 
   test('trang chủ lúc bật Dark Mode', async ({ page }) => {
@@ -43,8 +48,13 @@ test.describe('Visual Regression Testing', () => {
     // Chụp lại và lưu với tên khác
     await expect(page).toHaveScreenshot('homepage-dark-mode.png', {
       maxDiffPixels: 100,
-      fullPage: true,
       animations: 'disabled'
     });
+
+    // Đính kèm ảnh gốc (Baseline) vào Report
+    const snapshotPath = test.info().snapshotPath('homepage-dark-mode.png');
+    if (fs.existsSync(snapshotPath)) {
+      await test.info().attach('Baseline Image', { path: snapshotPath, contentType: 'image/png' });
+    }
   });
 });

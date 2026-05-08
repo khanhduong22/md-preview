@@ -11,6 +11,11 @@ export function startTour() {
       else privacyNotice.style.display = 'none';
     }
 
+    // Đảm bảo ở chế độ split để cả Editor và Preview đều hiển thị trong quá trình Tour
+    if (currentViewMode !== 'split') {
+      setViewMode('split');
+    }
+
     const driverObj = window.driver.js.driver({
       showProgress: true,
       animate: true,

@@ -182,7 +182,7 @@ function applyGraphicScaling(element, scaleFactor, elementType) {
   element.style.marginBottom = `-${originalHeight - scaledHeight}px`;
 }
 
-function handleOversizedElements(oversizedElements, pageHeightPx) {
+export function handleOversizedElements(oversizedElements, pageHeightPx) {
   if (!oversizedElements || oversizedElements.length === 0) return;
   for (const item of oversizedElements) {
     const { scaleFactor } = calculateScaleFactor(item.height, pageHeightPx);

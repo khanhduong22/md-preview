@@ -602,7 +602,16 @@ import { syncEditorToPreview, currentViewMode, restoreViewMode } from '../utils/
         await writable.write(tab.content);
         await writable.close();
         if (AppState.vaultMiniSearch) {
-          AppState.vaultMiniSearch.add({ id: tab.id, title: tab.title, path: tab.path, content: tab.content });
+          try {
+            const doc = { id: tab.id, title: tab.title, path: tab.path, content: tab.content };
+            if (AppState.vaultMiniSearch.has(tab.id)) {
+              AppState.vaultMiniSearch.replace(doc);
+            } else {
+              AppState.vaultMiniSearch.add(doc);
+            }
+          } catch (searchErr) {
+            console.warn('MiniSearch update error:', searchErr);
+          }
         }
       } catch(e) {
         console.error('Failed to write cleanly to vault:', e);

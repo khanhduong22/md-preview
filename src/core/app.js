@@ -13,7 +13,7 @@ import { restoreViewMode } from "../utils/viewMode.js";
 import { initHistory } from "./history.js";
 import { demo30ChartsMarkdown } from "../utils/demo-charts.js";
 import { sampleMarkdown } from "../utils/sample.js";
-import { decodeShareHash } from "../utils/share.js";
+import { decodeShareHash, getShareModeFromHash } from "../utils/share.js";
 import { AppState } from "./state.js";
 import { renderMarkdown } from "./render.js";
 import { markdownEditor } from "./dom.js";
@@ -90,7 +90,7 @@ export async function bootstrapApp() {
       AppState.tabs.push(shareTab);
       AppState.activeTabId = shareTab.id;
       markdownEditor.value = shareContent;
-      restoreViewMode("split");
+      restoreViewMode(getShareModeFromHash());
       saveTabsToStorage(AppState.tabs);
       saveActiveTabId(AppState.activeTabId);
     } else {

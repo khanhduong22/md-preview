@@ -3,7 +3,7 @@ import { markdownEditor } from '../core/dom.js';
 import { renderMarkdown } from '../core/render.js';
 import { AppState } from '../core/state.js';
 import { createTab, saveTabsToStorage, saveActiveTabId, renderTabBar } from '../core/tabs.js';
-import { restoreViewMode } from './viewMode.js';
+import { restoreViewMode, currentViewMode } from './viewMode.js';
 import { saveShareSnapshot } from '../core/history.js';
 
 // ============================================
@@ -56,7 +56,7 @@ function copyShareUrl(btn) {
   }
 
   const shareUrl =
-    window.location.origin + window.location.pathname + "#share=" + encoded;
+    window.location.origin + window.location.pathname + "#share=" + encoded + "&mode=" + currentViewMode;
   const tooLarge = shareUrl.length > MAX_SHARE_URL_LENGTH;
 
   const originalHTML = btn.innerHTML;
@@ -64,7 +64,7 @@ function copyShareUrl(btn) {
 
   function onCopied() {
     if (!tooLarge) {
-      window.location.hash = "share=" + encoded;
+      window.location.hash = "share=" + encoded + "&mode=" + currentViewMode;
     }
     btn.innerHTML = copiedHTML;
     setTimeout(() => {
@@ -160,6 +160,11 @@ function decodeShareHash() {
   }
 }
 
+export function getShareModeFromHash() {
+  const match = window.location.hash.match(/(?:&|\?)mode=([a-zA-Z]+)/);
+  return match ? match[1] : "split";
+}
+
 /**
  * Handle share hash changes when the app is already open.
  */
@@ -171,7 +176,7 @@ function loadFromShareHashChange() {
   AppState.tabs.push(shareTab);
   AppState.activeTabId = shareTab.id;
   markdownEditor.value = shareContent;
-  restoreViewMode("split");
+  restoreViewMode(getShareModeFromHash());
   renderMarkdown();
   saveTabsToStorage(AppState.tabs);
   saveActiveTabId(AppState.activeTabId);

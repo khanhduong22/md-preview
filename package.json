@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test:visual": "playwright test"
+    "test:visual": "playwright test && playwright show-report"
   },
   "repository": {
     "type": "git",
@@ -24,5 +24,13 @@
   "devDependencies": {
     "@playwright/test": "^1.59.1",
     "vite": "^8.0.10"
+  },
+  "dependencies": {
+    "dompurify": "^3.4.2",
+    "jsdom": "^29.1.1",
+    "marked": "^9.1.6",
+    "plantuml-encoder": "^1.4.0",
+    "playwright": "^1.60.0",
+    "puppeteer": "^24.43.1"
   }
 }

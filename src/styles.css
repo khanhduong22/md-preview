@@ -78,11 +78,16 @@ body {
 .sidebar-explorer {
   width: 260px;
   background-color: var(--header-bg);
-  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   transition: width 0.1s linear;
+}
+#sidebar-toc {
+  border-right: 1px solid var(--border-color);
+}
+#sidebar-explorer {
+  border-left: 1px solid var(--border-color);
 }
 
 .sidebar-header {
@@ -2412,3 +2417,224 @@ a:focus {
 .tab-pinned-icon { color: #f59e0b; font-size: 11px; margin-right: 2px; }
 
 .tab-ctx-divider { height: 1px; background: var(--border-color); margin: 4px 8px; }
+
+/* =========================================
+   DOCUMENT THEMES
+   ========================================= */
+
+/* 1. Theme "Academic" (Học thuật) */
+.markdown-body.theme-academic {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 18px;
+    line-height: 2;
+    background-color: #fcfcfc;
+    color: #111;
+}
+.markdown-body.theme-academic h1, 
+.markdown-body.theme-academic h2 {
+    text-align: center;
+    border-bottom: 2px solid #333;
+    margin-top: 1.5em;
+    padding-bottom: 0.3em;
+}
+.markdown-body.theme-academic blockquote {
+    border-left: 4px solid #666;
+    color: #444;
+    font-style: italic;
+    background: #f4f4f4;
+}
+
+/* 2. Theme "Business" (Doanh nghiệp) */
+.markdown-body.theme-business {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #2c3e50;
+}
+.markdown-body.theme-business h1,
+.markdown-body.theme-business h2,
+.markdown-body.theme-business h3 {
+    color: #2980b9;
+    font-weight: 700;
+}
+.markdown-body.theme-business table {
+    border-collapse: collapse;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.markdown-body.theme-business th {
+    background-color: #2980b9;
+    color: white;
+    border: none;
+}
+.markdown-body.theme-business td {
+    border-color: #e0e6ed;
+}
+.markdown-body.theme-business blockquote {
+    border-left: 4px solid #2980b9;
+    background-color: #ecf0f1;
+    color: #34495e;
+}
+
+/* 3. Theme "Hacker" (Terminal) */
+.markdown-body.theme-hacker {
+    background-color: #0d1117;
+    color: #00ff00;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+}
+.markdown-body.theme-hacker h1,
+.markdown-body.theme-hacker h2,
+.markdown-body.theme-hacker h3 {
+    color: #00ff00;
+    border-bottom-color: #00ff00;
+}
+.markdown-body.theme-hacker a {
+    color: #00ff00;
+    text-decoration: underline;
+    text-decoration-style: dashed;
+}
+.markdown-body.theme-hacker code,
+.markdown-body.theme-hacker pre {
+    background-color: #002200;
+    color: #00ff00;
+    border: 1px solid #00ff00;
+}
+.markdown-body.theme-hacker table th,
+.markdown-body.theme-hacker table td {
+    border: 1px solid #00ff00;
+}
+
+/* 4. Theme "Typewriter" */
+.markdown-body.theme-typewriter {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #f4f0e6;
+    color: #2c2c2c;
+    letter-spacing: 0.5px;
+}
+.markdown-body.theme-typewriter h1,
+.markdown-body.theme-typewriter h2 {
+    text-transform: uppercase;
+    border-bottom: 2px dashed #7a7a7a;
+}
+.markdown-body.theme-typewriter blockquote {
+    border-left: 5px solid #2c2c2c;
+    background-color: #eaddc5;
+}
+
+/* 5. Theme "Newspaper" */
+.markdown-body.theme-newspaper {
+    font-family: 'Georgia', serif;
+    background-color: #faf8f5;
+    color: #111;
+    column-count: 1; /* For simple newspaper look */
+}
+.markdown-body.theme-newspaper h1 {
+    font-size: 3em;
+    text-align: center;
+    font-weight: 900;
+    text-transform: uppercase;
+    border-bottom: 4px double #111;
+    border-top: 4px double #111;
+    padding: 10px 0;
+    margin-bottom: 0.5em;
+}
+.markdown-body.theme-newspaper h2 {
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+}
+.markdown-body.theme-newspaper p {
+    text-align: justify;
+}
+
+/* 6. Theme "Manuscript" */
+.markdown-body.theme-manuscript {
+    font-family: 'Palatino', 'Palatino Linotype', serif;
+    background-color: #fffdf5;
+    color: #3e3222;
+    line-height: 2.2;
+    font-size: 19px;
+}
+.markdown-body.theme-manuscript h1,
+.markdown-body.theme-manuscript h2 {
+    color: #5e1111;
+    font-family: 'Georgia', serif;
+    text-align: center;
+}
+
+/* 7. Theme "Minimal" */
+.markdown-body.theme-minimal {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background-color: #ffffff;
+    color: #333333;
+    max-width: 700px;
+    margin: 0 auto;
+}
+.markdown-body.theme-minimal h1,
+.markdown-body.theme-minimal h2,
+.markdown-body.theme-minimal h3 {
+    font-weight: 500;
+    letter-spacing: -0.5px;
+    color: #000;
+}
+.markdown-body.theme-minimal a {
+    color: #000;
+    text-decoration: underline;
+    text-decoration-color: #ccc;
+    text-underline-offset: 4px;
+}
+
+/* 8. Theme "Ocean" */
+.markdown-body.theme-ocean {
+    background-color: #f0f8ff;
+    color: #003366;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.markdown-body.theme-ocean h1,
+.markdown-body.theme-ocean h2 {
+    color: #0066cc;
+    border-bottom: 2px solid #b3d9ff;
+}
+.markdown-body.theme-ocean a {
+    color: #0099ff;
+}
+.markdown-body.theme-ocean blockquote {
+    background-color: #e6f2ff;
+    border-left-color: #0066cc;
+    color: #004c99;
+}
+
+/* 9. Theme "Sunset" */
+.markdown-body.theme-sunset {
+    background-color: #fff5ee;
+    color: #4a2511;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+.markdown-body.theme-sunset h1,
+.markdown-body.theme-sunset h2 {
+    color: #cc4400;
+    border-bottom: 2px solid #ffccb3;
+}
+.markdown-body.theme-sunset a {
+    color: #ff6600;
+}
+.markdown-body.theme-sunset blockquote {
+    background-color: #ffe6cc;
+    border-left-color: #ff6600;
+}
+
+/* 10. Theme "Rainbow" */
+.markdown-body.theme-rainbow h1 {
+    background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
+    -webkit-background-clip: text;
+    color: transparent;
+    border-bottom: none;
+    text-align: center;
+}
+.markdown-body.theme-rainbow h2 {
+    color: #ff00ff;
+    border-bottom: 2px dashed #00ffff;
+}
+.markdown-body.theme-rainbow a {
+    color: #ff0000;
+    font-weight: bold;
+}

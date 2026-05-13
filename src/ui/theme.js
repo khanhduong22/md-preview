@@ -31,4 +31,36 @@ export function initTheme() {
       renderMarkdown();
     });
   }
+
+  // Document Theme Selector Logic
+  const themeSelectors = document.querySelectorAll(".doc-theme-select");
+  const markdownPreview = document.getElementById("markdown-preview");
+
+  if (themeSelectors.length > 0 && markdownPreview) {
+    themeSelectors.forEach((selector) => {
+      selector.addEventListener("click", (e) => {
+        e.preventDefault();
+        
+        // Remove active class from all
+        themeSelectors.forEach(s => s.classList.remove("active"));
+        // Add active to clicked
+        selector.classList.add("active");
+
+        // Get selected theme
+        const selectedTheme = selector.getAttribute("data-theme");
+
+        // Remove all existing theme classes from preview
+        markdownPreview.className.split(' ').forEach(className => {
+          if (className.startsWith('theme-')) {
+            markdownPreview.classList.remove(className);
+          }
+        });
+
+        // Add new theme class if not default
+        if (selectedTheme !== "default") {
+          markdownPreview.classList.add(`theme-${selectedTheme}`);
+        }
+      });
+    });
+  }
 }

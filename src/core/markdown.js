@@ -57,6 +57,24 @@ renderer.code = function (code, language) {
 
     return `<div class="mermaid-container"><pre class="mermaid" id="${uniqueId}">${escapeHtml(fixedCode)}</pre></div>`;
   }
+  
+  if (language === "plantuml" || language === "puml") {
+    if (window.plantumlEncoder) {
+      const encoded = window.plantumlEncoder.encode(code);
+      return `<div class="plantuml-container" style="text-align: center; margin: 1.5em 0;">
+                <img src="https://www.plantuml.com/plantuml/svg/${encoded}" alt="PlantUML Diagram" style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+              </div>`;
+    }
+  }
+
+  if (language === "drawio") {
+    // Escape quotes to put XML in data-mxgraph attribute
+    const escapedXml = code.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const graphConfig = `{"highlight":"#0366d6","nav":true,"resize":true,"toolbar":"zoom layers tags lightbox","edit":"_blank","xml":"${escapedXml}"}`;
+    return `<div class="mxgraph-container" style="text-align: center; margin: 1.5em 0;">
+              <div class="mxgraph" style="max-width:100%;border:1px solid var(--border-color);border-radius:6px;background:var(--preview-bg);" data-mxgraph="${graphConfig}"></div>
+            </div>`;
+  }
 
   const validLanguage = hljs.getLanguage(language) ? language : "plaintext";
   const highlightedCode = hljs.highlight(code, {

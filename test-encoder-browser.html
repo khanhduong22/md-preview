@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.min.js"></script>
+</head>
+<body>
+  <script>
+    console.log("plantumlEncoder is:", typeof window.plantumlEncoder);
+    if (typeof window.plantumlEncoder !== 'undefined') {
+       console.log("Encoding test:", window.plantumlEncoder.encode("A -> B"));
+    }
+  </script>
+</body>
+</html>

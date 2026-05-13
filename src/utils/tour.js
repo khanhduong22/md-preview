@@ -32,19 +32,27 @@ export function startTour() {
           }
         },
         {
-          element: '#open-vault-btn',
+          element: '#sidebar-toc',
           popover: {
-            title: 'Kết nối Thư mục (Vault) 📂',
-            description: 'Tính năng cực mạnh! Cấp quyền cho trình duyệt đọc/ghi trực tiếp vào một thư mục trên máy tính của bạn. Giống hệt cách Obsidian hoạt động!',
+            title: 'Mục lục Tự động (Outline) 📑',
+            description: 'Tự động tạo mục lục dựa trên các thẻ Heading (H1, H2...). Bấm vào để nhảy nhanh tới nội dung.',
             side: "right", align: 'start'
           }
         },
         {
-          element: '.sidebar-explorer',
+          element: '#open-vault-btn',
+          popover: {
+            title: 'Kết nối Thư mục (Vault) 📂',
+            description: 'Tính năng cực mạnh! Cấp quyền cho trình duyệt đọc/ghi trực tiếp vào một thư mục trên máy tính của bạn. Giống hệt cách Obsidian hoạt động!',
+            side: "left", align: 'start'
+          }
+        },
+        {
+          element: '#sidebar-explorer',
           popover: {
             title: 'Quản lý File Local 🗂️',
             description: 'Toàn bộ cây thư mục và tài liệu của bạn sẽ hiển thị ở đây. An toàn tuyệt đối, không có bất kỳ dữ liệu nào gửi lên Server lạ.',
-            side: "right", align: 'start'
+            side: "left", align: 'start'
           }
         },
         {
@@ -148,6 +156,14 @@ export function startTour() {
           popover: {
             title: 'Lịch sử Phiên bản ⏱️',
             description: 'Lỡ tay xoá nhầm? Đừng lo! Hệ thống tự động lưu lại các mốc thời gian để bạn dễ dàng phục hồi lại bản nháp cũ.',
+            side: "bottom", align: 'end'
+          }
+        },
+        {
+          element: '#docThemeDropdown',
+          popover: {
+            title: 'Giao diện Tài liệu 🎨',
+            description: 'Thay đổi phong cách văn bản tức thì với các Theme chuyên nghiệp. Hỗ trợ đầy đủ từ Academic, Business đến Hacker.',
             side: "bottom", align: 'end'
           }
         },

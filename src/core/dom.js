@@ -6,3 +6,7 @@ export const previewPane = document.querySelector(".preview-pane");
 export const readingTimeElement = document.getElementById("reading-time");
 export const wordCountElement = document.getElementById("word-count");
 export const charCountElement = document.getElementById("char-count");
+export const tocToggleBtn = document.getElementById("toc-toggle-btn");
+export const sidebarToc = document.getElementById("sidebar-toc");
+export const explorerToggleBtn = document.getElementById("explorer-toggle-btn");
+export const sidebarExplorer = document.getElementById("sidebar-explorer");

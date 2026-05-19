@@ -381,9 +381,9 @@
             <!-- Sidebar Explorer (Right) -->
             <div id="sidebar-resizer" class="sidebar-resizer"></div>
             <aside id="sidebar-explorer" class="sidebar-explorer">
-                <div class="sidebar-header">
-                    <span class="sidebar-title">Explorer</span>
-                    <div style="display: flex; gap: 4px; align-items: center;">
+                <div class="sidebar-header" style="justify-content: flex-start; gap: 8px;">
+                    <span class="sidebar-title" style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Explorer</span>
+                    <div class="vault-actions-container" style="display: flex; gap: 4px; align-items: center;">
                         <button id="root-new-folder-btn" class="tool-button vault-action-btn" title="New Root Folder" style="display: none; padding: 4px 8px;">
                             <i class="bi bi-folder-plus"></i>
                         </button>
@@ -395,9 +395,12 @@
                             <i class="bi bi-cloud-arrow-down"></i>
                         </button>
                         <button id="open-vault-btn" class="tool-button" title="Open Local Folder" style="padding: 4px 8px;">
-                            <i class="bi bi-folder2-open"></i> Vault
+                            <i class="bi bi-folder2-open"></i>
                         </button>
                     </div>
+                    <button id="explorer-toggle-btn" class="tool-button" style="padding: 4px 8px;">
+                        <i class="bi bi-list"></i>
+                    </button>
                 </div>
                 <div id="file-tree" class="file-tree">
                     <div class="empty-vault-message">
@@ -427,6 +430,9 @@
                 </button>
                 <button class="mermaid-toolbar-btn" id="mermaid-modal-zoom-reset" title="Reset zoom">
                     <i class="bi bi-arrows-angle-contract"></i> Reset
+                </button>
+                <button class="mermaid-toolbar-btn" id="mermaid-modal-fullscreen" title="Toggle Fullscreen">
+                    <i class="bi bi-arrows-fullscreen"></i> Fullscreen
                 </button>
                 <button class="mermaid-toolbar-btn" id="mermaid-modal-copy" title="Copy image">
                     <i class="bi bi-clipboard-image"></i> Copy

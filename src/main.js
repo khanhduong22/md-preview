@@ -10,6 +10,8 @@ import { initFocusMode } from "./utils/focusMode.js";
 import { initAutoSave } from "./core/autosave.js";
 import { sampleMarkdown } from "./utils/sample.js";
 import { markdownEditor } from "./core/dom.js";
+import { initMermaidZoomModal } from "./utils/mermaidTools.js";
+import { initSidebars } from "./ui/sidebar.js";
 
 // Set initial value so it doesn't flash empty
 markdownEditor.value = sampleMarkdown;
@@ -24,4 +26,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initAutoSave();
   initFocusMode();
   initTour();
+  initMermaidZoomModal();
+  initSidebars();
 });

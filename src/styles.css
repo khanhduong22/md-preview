@@ -109,6 +109,23 @@ body {
   padding: 8px 0;
 }
 
+.sidebar-explorer.collapsed {
+  width: 44px !important;
+  min-width: 44px !important;
+}
+
+.sidebar-explorer.collapsed .sidebar-title,
+.sidebar-explorer.collapsed .file-tree,
+.sidebar-explorer.collapsed .empty-vault-message,
+.sidebar-explorer.collapsed .vault-actions-container {
+  display: none !important;
+}
+
+.sidebar-explorer.collapsed .sidebar-header {
+  padding: 12px 8px;
+  justify-content: center !important;
+}
+
 .empty-vault-message {
   padding: 20px;
   text-align: center;
@@ -287,7 +304,9 @@ body {
 /* ========================================
    HIDE HEADER MODE STYLES
    ======================================== */
-body.focus-mode .app-header {
+body.focus-mode .app-header,
+body.focus-mode .sidebar-explorer,
+body.focus-mode .sidebar-resizer {
   display: none !important;
 }
 
@@ -305,7 +324,7 @@ body.focus-mode .dropzone {
   top: 0;
   left: 0;
   width: 100%;
-  height: 6px;
+  height: 32px;
   z-index: 1100;
   display: none;
   align-items: flex-start;
@@ -1449,6 +1468,15 @@ a:focus {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.mermaid-modal-content.fullscreen {
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  border-radius: 0;
+  border: none;
 }
 
 @media (max-width: 576px) {

@@ -118,6 +118,13 @@ export function closeMermaidModal() {
   }
   mermaidModalDiagram.innerHTML = '';
   modalCurrentSvgEl = null;
+
+  const content = document.querySelector('.mermaid-modal-content');
+  if (content) content.classList.remove('fullscreen');
+  const fullscreenBtn = document.getElementById('mermaid-modal-fullscreen');
+  if (fullscreenBtn) {
+    fullscreenBtn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Fullscreen';
+  }
 }
 
 export function openMermaidZoomModal(container) {
@@ -182,6 +189,18 @@ export function initMermaidZoomModal() {
       panzoomInstance.zoomAbs(0, 0, 1);
     }
   });
+
+  const fullscreenBtn = document.getElementById('mermaid-modal-fullscreen');
+  if (fullscreenBtn) {
+    fullscreenBtn.addEventListener('click', function() {
+      const content = document.querySelector('.mermaid-modal-content');
+      content.classList.toggle('fullscreen');
+      const isFullscreen = content.classList.contains('fullscreen');
+      this.innerHTML = isFullscreen 
+        ? '<i class="bi bi-fullscreen-exit"></i> Exit'
+        : '<i class="bi bi-arrows-fullscreen"></i> Fullscreen';
+    });
+  }
 
   document.getElementById('mermaid-modal-download-png').addEventListener('click', async function() {
     if (!modalCurrentSvgEl) return;

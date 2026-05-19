@@ -42,6 +42,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css"/>
     
+    <!-- PlantUML & Draw.io dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.min.js"></script>
+    <script type="text/javascript" src="https://viewer.diagrams.net/js/viewer-static.min.js"></script>
+    
     <!-- Loading order optimized - ensure libraries are loaded before they're used -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -158,6 +162,30 @@
                     <button id="history-btn" class="tool-button" title="Version History">
                         <i class="bi bi-clock-history"></i>
                     </button>
+
+                    <div class="dropdown">
+                        <button class="tool-button dropdown-toggle" type="button" id="docThemeDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Document Theme">
+                            <i class="bi bi-palette"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="docThemeDropdown" style="max-height: 400px; overflow-y: auto;">
+                            <li><h6 class="dropdown-header">Classic & Reading</h6></li>
+                            <li><a class="dropdown-item doc-theme-select active" href="#" data-theme="default">Default</a></li>
+                            <li><a class="dropdown-item doc-theme-select" href="#" data-theme="academic">Academic (Serif)</a></li>
+                            <li><a class="dropdown-item doc-theme-select" href="#" data-theme="typewriter">Typewriter</a></li>
+                            <li><a class="dropdown-item doc-theme-select" href="#" data-theme="newspaper">Newspaper</a></li>
+                            <li><a class="dropdown-item doc-theme-select" href="#" data-theme="manuscript">Manuscript</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">Modern & Technical</h6></li>
+                            <li><a class="dropdown-item doc-theme-select" href="#" data-theme="business">Business (Corporate)</a></li>
+                            <li><a class="dropdown-item doc-theme-select" href="#" data-theme="minimal">Minimal</a></li>
+                            <li><a class="dropdown-item doc-theme-select" href="#" data-theme="hacker">Hacker (Terminal)</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">Colorful</h6></li>
+                            <li><a class="dropdown-item doc-theme-select" href="#" data-theme="ocean">Ocean</a></li>
+                            <li><a class="dropdown-item doc-theme-select" href="#" data-theme="sunset">Sunset</a></li>
+                            <li><a class="dropdown-item doc-theme-select" href="#" data-theme="rainbow">Rainbow</a></li>
+                        </ul>
+                    </div>
                     
                     <button id="theme-toggle" class="tool-button" title="Toggle Dark Mode">
                         <i class="bi bi-moon"></i>
@@ -271,33 +299,21 @@
         </header>
 
         <div class="app-body">
-            <!-- Sidebar Explorer -->
-            <aside id="sidebar-explorer" class="sidebar-explorer">
-                <div class="sidebar-header">
-                    <span class="sidebar-title">Explorer</span>
-                    <div style="display: flex; gap: 4px; align-items: center;">
-                        <button id="root-new-folder-btn" class="tool-button vault-action-btn" title="New Root Folder" style="display: none; padding: 4px 8px;">
-                            <i class="bi bi-folder-plus"></i>
-                        </button>
-                        <button id="root-new-file-btn" class="tool-button vault-action-btn" title="New Root File" style="display: none; padding: 4px 8px;">
-                            <i class="bi bi-file-earmark-plus"></i>
-                        </button>
-                        <div style="width: 1px; height: 16px; background: var(--border-color); margin: 0 4px;" class="vault-action-divider" style="display: none;"></div>
-                        <button id="sync-vault-btn" class="tool-button" title="Sync Virtual Notes to Vault" style="display: none; padding: 4px 8px;">
-                            <i class="bi bi-cloud-arrow-down"></i>
-                        </button>
-                        <button id="open-vault-btn" class="tool-button" title="Open Local Folder" style="padding: 4px 8px;">
-                            <i class="bi bi-folder2-open"></i> Vault
-                        </button>
-                    </div>
+            <!-- Sidebar TOC (Left) -->
+            <aside id="sidebar-toc" class="sidebar-explorer">
+                <div class="sidebar-header" style="justify-content: flex-start; gap: 8px;">
+                    <button id="toc-toggle-btn" class="tool-button" style="padding: 4px 8px;">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <span class="sidebar-title" id="toc-title-text" style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Outline</span>
                 </div>
-                <div id="file-tree" class="file-tree">
+                <div id="toc-tree" class="file-tree" style="padding-left: 8px;">
                     <div class="empty-vault-message">
-                        Open a local folder to browse your markdown files.
+                        No headings found in document.
                     </div>
                 </div>
             </aside>
-            <div id="sidebar-resizer" class="sidebar-resizer"></div>
+            <div id="toc-resizer" class="sidebar-resizer"></div>
             
             <main class="main-content">
                 <!-- Tab Bar -->
@@ -363,6 +379,37 @@
             </div>
         </div>
         </main>
+            
+            <!-- Sidebar Explorer (Right) -->
+            <div id="sidebar-resizer" class="sidebar-resizer"></div>
+            <aside id="sidebar-explorer" class="sidebar-explorer">
+                <div class="sidebar-header" style="justify-content: flex-start; gap: 8px;">
+                    <span class="sidebar-title" style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Explorer</span>
+                    <div class="vault-actions-container" style="display: flex; gap: 4px; align-items: center;">
+                        <button id="root-new-folder-btn" class="tool-button vault-action-btn" title="New Root Folder" style="display: none; padding: 4px 8px;">
+                            <i class="bi bi-folder-plus"></i>
+                        </button>
+                        <button id="root-new-file-btn" class="tool-button vault-action-btn" title="New Root File" style="display: none; padding: 4px 8px;">
+                            <i class="bi bi-file-earmark-plus"></i>
+                        </button>
+                        <div style="width: 1px; height: 16px; background: var(--border-color); margin: 0 4px;" class="vault-action-divider" style="display: none;"></div>
+                        <button id="sync-vault-btn" class="tool-button" title="Sync Virtual Notes to Vault" style="display: none; padding: 4px 8px;">
+                            <i class="bi bi-cloud-arrow-down"></i>
+                        </button>
+                        <button id="open-vault-btn" class="tool-button" title="Open Local Folder" style="padding: 4px 8px;">
+                            <i class="bi bi-folder2-open"></i>
+                        </button>
+                    </div>
+                    <button id="explorer-toggle-btn" class="tool-button" style="padding: 4px 8px;">
+                        <i class="bi bi-list"></i>
+                    </button>
+                </div>
+                <div id="file-tree" class="file-tree">
+                    <div class="empty-vault-message">
+                        Open a local folder to browse your markdown files.
+                    </div>
+                </div>
+            </aside>
         </div>
     </div>
 
@@ -385,6 +432,9 @@
                 </button>
                 <button class="mermaid-toolbar-btn" id="mermaid-modal-zoom-reset" title="Reset zoom">
                     <i class="bi bi-arrows-angle-contract"></i> Reset
+                </button>
+                <button class="mermaid-toolbar-btn" id="mermaid-modal-fullscreen" title="Toggle Fullscreen">
+                    <i class="bi bi-arrows-fullscreen"></i> Fullscreen
                 </button>
                 <button class="mermaid-toolbar-btn" id="mermaid-modal-copy" title="Copy image">
                     <i class="bi bi-clipboard-image"></i> Copy

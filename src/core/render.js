@@ -7,10 +7,7 @@ import {
   readingTimeElement,
 } from './dom.js';
 import { processEmojis } from "../utils/emoji.js";
-import {
-  initMermaidZoomModal,
-  addMermaidToolbars,
-} from "../utils/mermaidTools.js";
+import { addMermaidToolbars } from "../utils/mermaidTools.js";
 import { initMermaid } from "./markdown.js";
 
 const markdownPreview = document.getElementById('markdown-preview');

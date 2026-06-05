@@ -246,7 +246,14 @@ export async function exportToPdf(markdown, exportPdfBtn, currentTheme) {
 
     if (window.MathJax) {
       try {
-        await MathJax.typesetPromise([tempElement]);
+        if (typeof MathJax.typesetPromise === 'function') {
+          await MathJax.typesetPromise([tempElement]);
+        } else if (MathJax.startup && MathJax.startup.promise) {
+          await MathJax.startup.promise;
+          if (typeof MathJax.typesetPromise === 'function') {
+            await MathJax.typesetPromise([tempElement]);
+          }
+        }
       } catch (mathJaxError) {
         console.warn("MathJax rendering issue:", mathJaxError);
       }

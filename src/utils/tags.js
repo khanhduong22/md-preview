@@ -2,17 +2,7 @@
 import { AppState } from '../core/state.js';
 import { saveTabsToStorage, renderTabBar } from '../core/tabs.js';
 
-export function initTagsSetup() {
-// ========================================
-// 4. TAGS
-// ========================================
-const tagFilterBtn = document.getElementById("tag-filter-btn");
-const tagFilterDropdown = document.getElementById("tag-filter-dropdown");
-const tagFilterList = document.getElementById("tag-filter-list");
-const tagFilterClear = document.getElementById("tag-filter-clear");
-let activeTagFilter = null;
-
-function promptTagTab(tabId) {
+export function promptTagTab(tabId) {
   const tab = AppState.tabs.find((t) => t.id === tabId);
   if (!tab) return;
   const currentTags = (tab.tags || []).join(", ");
@@ -25,6 +15,16 @@ function promptTagTab(tabId) {
   saveTabsToStorage(AppState.tabs);
   renderTabBar(AppState.tabs, AppState.activeTabId);
 }
+
+export function initTagsSetup() {
+// ========================================
+// 4. TAGS
+// ========================================
+const tagFilterBtn = document.getElementById("tag-filter-btn");
+const tagFilterDropdown = document.getElementById("tag-filter-dropdown");
+const tagFilterList = document.getElementById("tag-filter-list");
+const tagFilterClear = document.getElementById("tag-filter-clear");
+let activeTagFilter = null;
 
 function getAllTags() {
   const tagSet = new Set();
@@ -60,7 +60,8 @@ function renderTagFilter() {
     item.addEventListener("click", () => {
       activeTagFilter = item.dataset.tag;
       renderTagFilter();
-      renderTabBar(AppState.tabs, AppState.activeTabId);
+      const filtered = AppState.tabs.filter(t => !activeTagFilter || (t.tags && t.tags.includes(activeTagFilter)));
+      renderTabBar(filtered, AppState.activeTabId);
       tagFilterDropdown.style.display = "none";
     });
   });

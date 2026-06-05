@@ -53,9 +53,19 @@ export function renderMarkdown() {
 
     if (window.MathJax) {
       try {
-        MathJax.typesetPromise([markdownPreview]).catch((err) => {
-          console.warn("MathJax typesetting failed:", err);
-        });
+        if (typeof MathJax.typesetPromise === 'function') {
+          MathJax.typesetPromise([markdownPreview]).catch((err) => {
+            console.warn("MathJax typesetting failed:", err);
+          });
+        } else if (MathJax.startup && MathJax.startup.promise) {
+          MathJax.startup.promise.then(() => {
+            if (typeof MathJax.typesetPromise === 'function') {
+              MathJax.typesetPromise([markdownPreview]).catch((err) => {
+                console.warn("MathJax typesetting failed:", err);
+              });
+            }
+          });
+        }
       } catch (e) {
         console.warn("MathJax rendering failed:", e);
       }

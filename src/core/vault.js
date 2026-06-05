@@ -90,13 +90,20 @@ import { markdownEditor } from './dom.js';
     try {
       AppState.vaultDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
       await localforage.setItem(VAULT_HANDLE_KEY, AppState.vaultDirHandle);
-      await initVault(AppState.vaultDirHandle);
+      
+      // Backup virtual tabs before clearing them so they can be imported
+      const virtualTabs = AppState.tabs.filter(t => !t.handle);
+      if (virtualTabs.length > 0) {
+        await localforage.setItem("md-preview-tabs", JSON.stringify(virtualTabs));
+      }
+      
+      await initVault(AppState.vaultDirHandle, false);
     } catch (e) {
-      // User cancelled
+      console.error("Vault open failed:", e);
     }
   }
 
-  export async function initVault(handle) {
+  export async function initVault(handle, isRestore = false) {
     if (!handle) return;
     AppState.vaultDirHandle = handle;
     AppState.localVaultMode = true;
@@ -110,6 +117,20 @@ import { markdownEditor } from './dom.js';
       btn.onclick = async () => {
         if (await AppState.vaultDirHandle.requestPermission({ mode: 'readwrite' }) === 'granted') {
           await renderVaultTree();
+          
+          // Reload active tab content from file system now that we have permission
+          const activeTab = AppState.tabs.find(t => t.id === AppState.activeTabId);
+          if (activeTab && activeTab.handle) {
+            try {
+              const file = await activeTab.handle.getFile();
+              activeTab.content = await file.text();
+              markdownEditor.value = activeTab.content || '';
+              const { renderMarkdown } = await import('./render.js');
+              renderMarkdown();
+            } catch (err) {
+              console.warn("Failed to reload active tab after re-authorization", err);
+            }
+          }
         }
       };
       const tree = document.getElementById('file-tree');
@@ -118,11 +139,13 @@ import { markdownEditor } from './dom.js';
       return;
     }
     
-    // Clear virtual AppState.tabs completely to focus on Vault
-    AppState.tabs = [];
-    AppState.activeTabId = null;
-    markdownEditor.value = '';
-    renderTabBar(AppState.tabs, AppState.activeTabId);
+    if (!isRestore) {
+      // Clear virtual AppState.tabs completely to focus on Vault
+      AppState.tabs = [];
+      AppState.activeTabId = null;
+      markdownEditor.value = '';
+      renderTabBar(AppState.tabs, AppState.activeTabId);
+    }
     
     document.getElementById('root-new-folder-btn').style.display = 'inline-flex';
     document.getElementById('root-new-file-btn').style.display = 'inline-flex';
@@ -377,3 +400,18 @@ async function checkVirtualSync() {
       syncBtn.style.display = 'none';
     }
   }
+
+function bindOpenVaultBtn() {
+  const openVaultBtn = document.getElementById('open-vault-btn');
+  if (openVaultBtn) {
+    openVaultBtn.addEventListener('click', openLocalVault);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bindOpenVaultBtn);
+} else {
+  bindOpenVaultBtn();
+}
+
+

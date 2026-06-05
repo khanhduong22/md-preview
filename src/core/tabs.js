@@ -4,20 +4,25 @@ import { renderVaultTree } from './vault.js';
 import { markdownEditor } from './dom.js';
 import { renderMarkdown } from './render.js';
 import { syncEditorToPreview, currentViewMode, restoreViewMode } from '../utils/viewMode.js';
+import { sampleMarkdown } from '../utils/sample.js';
+import { demo30ChartsMarkdown } from '../utils/demo-charts.js';
 
   export async function loadTabsFromStorage() {
     try {
       const data = await localforage.getItem(STORAGE_KEY);
-      return data ? JSON.parse(data) : [];
+      if (!data) return [];
+      if (typeof data === 'string') {
+        return JSON.parse(data);
+      }
+      return data;
     } catch (e) {
       return [];
     }
   }
 
   export function saveTabsToStorage(tabsArr) {
-    if (AppState.localVaultMode) return; // Do not save entire array into IndexedDB in block when vault is active
     try {
-      localforage.setItem(STORAGE_KEY, JSON.stringify(tabsArr));
+      localforage.setItem(STORAGE_KEY, tabsArr);
     } catch (e) {
       console.warn('Failed to save AppState.tabs to localforage:', e);
     }
@@ -28,7 +33,6 @@ import { syncEditorToPreview, currentViewMode, restoreViewMode } from '../utils/
   }
 
   export function saveActiveTabId(id) {
-    if (AppState.localVaultMode) return;
     localforage.setItem(ACTIVE_TAB_KEY, id);
   }
 

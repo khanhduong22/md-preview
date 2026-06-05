@@ -57,50 +57,61 @@ export async function bootstrapApp() {
 
   const storedHandle = await localforage.getItem(VAULT_HANDLE_KEY);
   if (storedHandle) {
-    await initVault(storedHandle);
+    await initVault(storedHandle, true);
   }
 
   AppState.untitledCounter = await loadUntitledCounter();
   AppState.tabs = await loadTabsFromStorage();
   AppState.activeTabId = await loadActiveTabId();
 
-  if (!AppState.localVaultMode) {
-    if (AppState.tabs.length === 0) {
+  // Create default tabs if none exist (only in normal mode)
+  if (AppState.tabs.length === 0) {
+    if (!AppState.localVaultMode) {
       const tab = createTab(sampleMarkdown, "Welcome to Markdown");
       AppState.tabs.push(tab);
 
       if (typeof demo30ChartsMarkdown !== "undefined") {
-        const demoGroup = { id: "demo-group", name: "demo", color: "purple" }; // Wait, createGroup is not imported here easily, let's keep it simple
         const demoTab = createTab(demo30ChartsMarkdown, "30 chart");
-        // demoTab.groupId = demoGroup.id;
         AppState.tabs.push(demoTab);
       }
 
       AppState.activeTabId = tab.id;
       saveTabsToStorage(AppState.tabs);
       saveActiveTabId(AppState.activeTabId);
-    } else if (!AppState.tabs.find((t) => t.id === AppState.activeTabId)) {
-      AppState.activeTabId = AppState.tabs[0].id;
-      saveActiveTabId(AppState.activeTabId);
     }
+  } else if (!AppState.tabs.find((t) => t.id === AppState.activeTabId)) {
+    AppState.activeTabId = AppState.tabs[0].id;
+    saveActiveTabId(AppState.activeTabId);
+  }
 
-    const shareContent = decodeShareHash();
-    if (shareContent !== null) {
-      const shareTab = createTab(shareContent, "Shared Note");
-      AppState.tabs.push(shareTab);
-      AppState.activeTabId = shareTab.id;
-      markdownEditor.value = shareContent;
-      restoreViewMode(getShareModeFromHash());
-      saveTabsToStorage(AppState.tabs);
-      saveActiveTabId(AppState.activeTabId);
-    } else {
-      const activeTab = AppState.tabs.find(
-        (t) => t.id === AppState.activeTabId,
-      );
-      if (activeTab) {
-        markdownEditor.value = activeTab.content || "";
-        restoreViewMode(activeTab.viewMode);
+  const shareContent = decodeShareHash();
+  if (shareContent !== null && !AppState.localVaultMode) {
+    const shareTab = createTab(shareContent, "Shared Note");
+    AppState.tabs.push(shareTab);
+    AppState.activeTabId = shareTab.id;
+    markdownEditor.value = shareContent;
+    restoreViewMode(getShareModeFromHash());
+    saveTabsToStorage(AppState.tabs);
+    saveActiveTabId(AppState.activeTabId);
+  } else {
+    const activeTab = AppState.tabs.find(
+      (t) => t.id === AppState.activeTabId,
+    );
+    if (activeTab) {
+      // If it's a vault file and we have permission, try to read the latest content from disk
+      if (activeTab.handle && AppState.localVaultMode) {
+        try {
+          const perm = await activeTab.handle.queryPermission({ mode: 'readwrite' });
+          if (perm === 'granted') {
+            const file = await activeTab.handle.getFile();
+            activeTab.content = await file.text();
+          }
+        } catch (e) {
+          console.warn("Could not load active tab from file system on bootstrap, using cached content", e);
+        }
       }
+      markdownEditor.value = activeTab.content || "";
+      restoreViewMode(activeTab.viewMode);
     }
   }
 

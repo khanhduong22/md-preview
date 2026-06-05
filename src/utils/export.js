@@ -1,6 +1,7 @@
 
 import { markdownEditor } from '../core/dom.js';
 import { PAGE_CONFIG, applyPageBreaksWithCascade, exportToPdf, handleOversizedElements } from './pdf.js';
+import { importMarkdownFile } from './import.js';
 
 export function initExportSetup() {
   const exportMd = document.getElementById("export-md");

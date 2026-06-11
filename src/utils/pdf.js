@@ -1,3 +1,11 @@
+function withTimeout(promise, ms, errorMessage) {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(errorMessage)), ms);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+}
+
 export const PAGE_CONFIG = {
   a4Width: 210,           // mm
   a4Height: 297,          // mm
@@ -34,9 +42,15 @@ function calculateElementPositions(elements, container) {
 }
 
 function calculatePageBoundaries(totalHeight, elementWidth, pageConfig) {
+  const width = elementWidth || 793; // 210mm A4 width fallback at 96dpi
   const aspectRatio = pageConfig.contentHeight / pageConfig.contentWidth;
-  const pageHeightPx = elementWidth * aspectRatio;
+  const pageHeightPx = width * aspectRatio;
   const boundaries = [];
+  
+  if (pageHeightPx < 10) {
+    return { boundaries, pageHeightPx: 0 };
+  }
+
   let y = pageHeightPx;
   while (y < totalHeight) {
     boundaries.push(y);
@@ -224,6 +238,8 @@ export async function exportToPdf(markdown, exportPdfBtn, currentTheme) {
     tempElement.innerHTML = sanitizedHtml;
     tempElement.style.padding = "20px";
     tempElement.style.width = "210mm";
+    tempElement.style.minWidth = "210mm";
+    tempElement.style.maxWidth = "none";
     tempElement.style.margin = "0 auto";
     tempElement.style.fontSize = "14px";
     tempElement.style.position = "fixed";
@@ -238,7 +254,11 @@ export async function exportToPdf(markdown, exportPdfBtn, currentTheme) {
 
     try {
       if (window.mermaid) {
-        await window.mermaid.run({ nodes: tempElement.querySelectorAll('.mermaid'), suppressErrors: true });
+        await withTimeout(
+          window.mermaid.run({ nodes: tempElement.querySelectorAll('.mermaid'), suppressErrors: true }),
+          3000,
+          "Mermaid rendering timed out"
+        );
       }
     } catch (mermaidError) {
       console.warn("Mermaid rendering issue:", mermaidError);
@@ -247,11 +267,23 @@ export async function exportToPdf(markdown, exportPdfBtn, currentTheme) {
     if (window.MathJax) {
       try {
         if (typeof MathJax.typesetPromise === 'function') {
-          await MathJax.typesetPromise([tempElement]);
+          await withTimeout(
+            MathJax.typesetPromise([tempElement]),
+            3000,
+            "MathJax typesetting timed out"
+          );
         } else if (MathJax.startup && MathJax.startup.promise) {
-          await MathJax.startup.promise;
+          await withTimeout(
+            MathJax.startup.promise,
+            3000,
+            "MathJax startup timed out"
+          );
           if (typeof MathJax.typesetPromise === 'function') {
-            await MathJax.typesetPromise([tempElement]);
+            await withTimeout(
+              MathJax.typesetPromise([tempElement]),
+              3000,
+              "MathJax typesetting timed out"
+            );
           }
         }
       } catch (mathJaxError) {
@@ -285,18 +317,59 @@ export async function exportToPdf(markdown, exportPdfBtn, currentTheme) {
     const margin = 15;
     const contentWidth = pageWidth - (margin * 2);
 
-    const canvas = await window.html2canvas(tempElement, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
-      windowWidth: 1000,
-      windowHeight: tempElement.scrollHeight
-    });
+    const originalGetComputedStyle = window.getComputedStyle;
+    window.getComputedStyle = function(el, pseudoEl) {
+      const style = originalGetComputedStyle.call(window, el, pseudoEl);
+      return new Proxy(style, {
+        get(target, prop) {
+          if (prop === 'getPropertyValue') {
+            return function(propertyName) {
+              const value = target.getPropertyValue.call(target, propertyName);
+              if (typeof value === 'string' && /(oklch|oklab|lab|lch)\([^)]+\)/i.test(value)) {
+                return value.replace(/(oklch|oklab|lab|lch)\([^)]+\)/gi, 'rgb(0, 0, 0)');
+              }
+              return value;
+            };
+          }
+          const value = Reflect.get(target, prop);
+          if (typeof value === 'function') {
+            return value.bind(target);
+          }
+          if (typeof value === 'string' && /(oklch|oklab|lab|lch)\([^)]+\)/i.test(value)) {
+            return value.replace(/(oklch|oklab|lab|lch)\([^)]+\)/gi, 'rgb(0, 0, 0)');
+          }
+          return value;
+        }
+      });
+    };
+
+    let canvas;
+    try {
+      canvas = await withTimeout(
+        window.html2canvas(tempElement, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          windowWidth: 1000,
+          windowHeight: tempElement.scrollHeight
+        }),
+        10000,
+        "html2canvas rendering timed out"
+      );
+    } finally {
+      window.getComputedStyle = originalGetComputedStyle;
+    }
 
     const scaleFactor = canvas.width / contentWidth;
+    if (scaleFactor <= 0 || !isFinite(scaleFactor)) {
+      throw new Error(`Invalid canvas scale factor (width: ${canvas.width}, contentWidth: ${contentWidth})`);
+    }
     const imgHeight = canvas.height / scaleFactor;
     const pagesCount = Math.ceil(imgHeight / (pageHeight - margin * 2));
+    if (pagesCount <= 0 || !isFinite(pagesCount)) {
+      throw new Error(`Invalid page count computed: ${pagesCount}`);
+    }
 
     for (let page = 0; page < pagesCount; page++) {
       if (page > 0) pdf.addPage();

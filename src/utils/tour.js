@@ -20,94 +20,94 @@ export function startTour() {
       showProgress: true,
       animate: true,
       allowClose: true,
-      nextBtnText: 'Tiếp tục ➔',
-      prevBtnText: '⬅ Quay lại',
-      doneBtnText: 'Hoàn thành ✔',
+      nextBtnText: 'Next ➔',
+      prevBtnText: '⬅ Back',
+      doneBtnText: 'Done ✔',
       steps: [
         {
           popover: {
-            title: 'Chào mừng đến với 2ndBrain! 🚀',
-            description: 'Chào mừng bạn đến với Markdown Editor cao cấp. Hãy dành 1 phút để lướt qua các tính năng đỉnh cao nhé!',
+            title: 'Welcome to 2ndBrain! 🚀',
+            description: 'Welcome to the premium Markdown Editor. Let\'s spend 1 minute to explore the outstanding features!',
             align: 'center'
           }
         },
         {
           element: '#sidebar-toc',
           popover: {
-            title: 'Mục lục Tự động (Outline) 📑',
-            description: 'Tự động tạo mục lục dựa trên các thẻ Heading (H1, H2...). Bấm vào để nhảy nhanh tới nội dung.',
+            title: 'Automatic Outline 📑',
+            description: 'Automatically generates a table of contents based on Heading tags (H1, H2...). Click to jump quickly to the content.',
             side: "right", align: 'start'
           }
         },
         {
           element: '#open-vault-btn',
           popover: {
-            title: 'Kết nối Thư mục (Vault) 📂',
-            description: 'Tính năng cực mạnh! Cấp quyền cho trình duyệt đọc/ghi trực tiếp vào một thư mục trên máy tính của bạn. Giống hệt cách Obsidian hoạt động!',
+            title: 'Connect Local Folder (Vault) 📂',
+            description: 'A highly powerful feature! Grant the browser permission to read/write directly to a folder on your computer. Exactly how Obsidian works!',
             side: "left", align: 'start'
           }
         },
         {
           element: '#sidebar-explorer',
           popover: {
-            title: 'Quản lý File Local 🗂️',
-            description: 'Toàn bộ cây thư mục và tài liệu của bạn sẽ hiển thị ở đây. An toàn tuyệt đối, không có bất kỳ dữ liệu nào gửi lên Server lạ.',
+            title: 'Local File Manager 🗂️',
+            description: 'Your entire directory tree and documents will be shown here. Absolute privacy: no data is sent to external servers.',
             side: "left", align: 'start'
           }
         },
         {
           element: '.tab-bar',
           popover: {
-            title: 'Tab & Group Tabs 📑',
-            description: 'Mở nhiều file cùng lúc, gom nhóm (Group) màu sắc các Tab lại với nhau siêu gọn gàng y hệt trình duyệt Chrome!',
+            title: 'Tabs & Tab Groups 📑',
+            description: 'Open multiple files at once, color-code/group tabs together, just like Google Chrome!',
             side: "bottom", align: 'start'
           }
         },
         {
           element: '#tag-filter-btn',
           popover: {
-            title: 'Lọc bài viết theo Tag 🏷️',
-            description: 'Chỉ cần gõ #tag vào bài viết, hệ thống sẽ tự động gom nhóm và giúp bạn lọc file cực nhanh ở đây.',
+            title: 'Filter by Tag 🏷️',
+            description: 'Just type #tag in your document; the system will auto-detect and let you filter files quickly here.',
             side: "bottom", align: 'end'
           }
         },
         {
           element: '#tab-reset-btn',
           popover: {
-            title: 'Reset Toàn bộ 🗑️',
-            description: 'Nếu muốn dọn dẹp sạch sẽ toàn bộ Cache hiện tại để làm lại từ đầu, hãy bấm nút này.',
+            title: 'Reset All 🗑️',
+            description: 'If you want to completely clean up the current cache and start fresh, click this button.',
             side: "bottom", align: 'end'
           }
         },
         {
           element: '.editor-pane',
           popover: {
-            title: 'Soạn thảo Siêu tốc ⚡',
-            description: 'Gõ Markdown ở đây. Bạn có thể kéo thả ảnh vào hoặc Paste ảnh trực tiếp. Đừng quên dùng phím tắt Ctrl+S để lưu nhé!',
+            title: 'High-speed Editing ⚡',
+            description: 'Write Markdown here. You can drag & drop images or paste them directly. Remember to use Ctrl+S to save!',
             side: "right", align: 'start'
           }
         },
         {
           element: '.preview-pane',
           popover: {
-            title: 'Render Thời gian thực 👁️',
-            description: 'Kết quả hiển thị ngay lập tức. Hỗ trợ Toán học (MathJax), Code Highlight (Highlight.js) và tới 30 loại sơ đồ siêu đỉnh (Mermaid.js)!',
+            title: 'Real-time Preview 👁️',
+            description: 'See the results instantly. Supports Mathematics (MathJax), Syntax Highlighting (Highlight.js), and up to 30 types of diagrams (Mermaid.js)!',
             side: "left", align: 'start'
           }
         },
         {
           element: '.view-mode-group',
           popover: {
-            title: 'Chế độ Hiển thị 🪟',
-            description: 'Chỉ Code, Chia đôi, hoặc Chỉ xem. Bấm nút Hide (mũi tên lên) ẩn thanh công cụ để tập trung tối đa.',
+            title: 'Display Modes 🪟',
+            description: 'Code only, Split view, or Preview only. Click the "Hide" button to hide the header and focus completely.',
             side: "bottom", align: 'center'
           }
         },
         {
           element: '#toggle-sync',
           popover: {
-            title: 'Đồng bộ Cuộn trang ↕️',
-            description: 'Tính năng cuộn đồng thời Editor và Preview cực mượt, giúp bạn không bao giờ bị lạc dòng.',
+            title: 'Synchronized Scrolling ↕️',
+            description: 'Synchronize scrolling between the Editor and Preview, ensuring you never lose track of your current line.',
             side: "bottom", align: 'start'
           }
         },
@@ -115,15 +115,15 @@ export function startTour() {
           element: '#import-button',
           popover: {
             title: 'Import File 📤',
-            description: 'Nạp nhanh một file Markdown (.md) từ máy tính của bạn vào Editor.',
+            description: 'Quickly load a Markdown file (.md) from your computer into the editor.',
             side: "bottom", align: 'start'
           }
         },
         {
           element: '#exportDropdown',
           popover: {
-            title: 'Xuất / Nhập Đa dạng 📥',
-            description: 'Hỗ trợ xuất sang HTML, PDF, Markdown hoặc Backup tải toàn bộ File (JSON) về máy.',
+            title: 'Import/Export Options 📥',
+            description: 'Export to HTML, PDF, Markdown, or download a full JSON backup of all files.',
             side: "bottom", align: 'start'
           }
         },
@@ -131,47 +131,47 @@ export function startTour() {
           element: '#copy-markdown-button',
           popover: {
             title: 'Copy Markdown 📋',
-            description: 'Copy nhanh toàn bộ nội dung Markdown hiện tại vào Clipboard chỉ với một Click.',
+            description: 'Quickly copy the entire Markdown content to your clipboard in a single click.',
             side: "bottom", align: 'start'
           }
         },
         {
           element: '#share-button',
           popover: {
-            title: 'Chia sẻ không cần Database 🔗',
-            description: 'Toàn bộ bài viết sẽ được nén lại thành Link. Bạn bè có thể xem ngay lập tức qua mạng mà không cần Database hay Đăng nhập!',
+            title: 'Serverless Sharing 🔗',
+            description: 'Compresses your document into a sharing link. Friends can view it instantly without any database or sign-in!',
             side: "bottom", align: 'end'
           }
         },
         {
           element: '#search-btn',
           popover: {
-            title: 'Tìm kiếm Toàn năng 🔍',
-            description: 'Bấm phím tắt Ctrl+K để tìm kiếm nội dung siêu tốc xuyên suốt toàn bộ các file trong Vault của bạn.',
+            title: 'Global Search 🔍',
+            description: 'Press Ctrl+K to search your notes instantly across all files in your Vault.',
             side: "bottom", align: 'end'
           }
         },
         {
           element: '#history-btn',
           popover: {
-            title: 'Lịch sử Phiên bản ⏱️',
-            description: 'Lỡ tay xoá nhầm? Đừng lo! Hệ thống tự động lưu lại các mốc thời gian để bạn dễ dàng phục hồi lại bản nháp cũ.',
+            title: 'Version History ⏱️',
+            description: 'Accidentally deleted something? The system automatically saves version checkpoints so you can easily restore previous drafts.',
             side: "bottom", align: 'end'
           }
         },
         {
           element: '#docThemeDropdown',
           popover: {
-            title: 'Giao diện Tài liệu 🎨',
-            description: 'Thay đổi phong cách văn bản tức thì với các Theme chuyên nghiệp. Hỗ trợ đầy đủ từ Academic, Business đến Hacker.',
+            title: 'Document Themes 🎨',
+            description: 'Instantly style your documents with professional theme layouts, ranging from Academic to Hacker.',
             side: "bottom", align: 'end'
           }
         },
         {
           element: '#tour-btn',
           popover: {
-            title: 'Trợ giúp ❓',
-            description: 'Bạn có thể xem lại hướng dẫn này bất cứ lúc nào bằng nút này. Chúc bạn làm việc hiệu quả!',
+            title: 'Help & Tour ❓',
+            description: 'You can replay this guided tour at any time by clicking this button. Happy writing!',
             side: "left", align: 'center'
           }
         }

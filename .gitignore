@@ -4,3 +4,5 @@ build/
 dist/
 report/
 coverage/
+playwright-report/
+test-results/

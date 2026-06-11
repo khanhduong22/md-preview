@@ -4,7 +4,7 @@
     <img src="assets/icon.jpg" alt="Markdown Viewer Logo" width="150px"/>
     <h3>A powerful GitHub-style Markdown rendering tool</h3>
     <p>Fast, secure, and feature-rich - all running in your browser</p>
-    <a href="https://markdownviewer.pages.dev/">Live Demo</a> • 
+    <a href="https://md.khanhdp.com">Live Demo</a> • 
     <a href="#-features">Features</a> • 
     <a href="#-screenshots">Screenshots</a> • 
     <a href="#-usage">Usage</a> • 
@@ -122,7 +122,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📈 Development Journey
 
-The Markdown Viewer has undergone significant evolution since its inception. What started as a simple markdown parser has grown into a full-featured, professional application with multiple advanced capabilities. By comparing the [current version](https://markdownviewer.pages.dev/) with the [original version](https://a1b91221.markdownviewer.pages.dev/), you can see the remarkable progress in UI design, performance optimization, and feature implementation.
+The Markdown Viewer has undergone significant evolution. What started as a simple markdown parser has grown into a full-featured, professional application with advanced capabilities:
+- **Robust Client-Side PDF Export**: Built-in, high-fidelity PDF renderer that computes precise pagination boundaries, automatically injects custom layout stylesheets, and handles complex HTML elements (tables, code blocks, lists) directly in the client without external backend servers.
+- **Interactive Onboarding Tour**: Full guided walkthrough system built to guide new users through advanced capabilities like live syncing and Mermaid diagram tools.
+
+By comparing the [current version](https://md.khanhdp.com) with the [original version](https://a1b91221.markdownviewer.pages.dev/), you can see the remarkable progress in UI design, performance optimization, and feature implementation.
 
 ---
 

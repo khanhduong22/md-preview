@@ -55,7 +55,7 @@ import { demo30ChartsMarkdown } from '../utils/demo-charts.js';
   // Tab Groups (Chrome-style)
   // ============================================
   
-  const GROUP_COLORS = [
+  export const GROUP_COLORS = [
     { name: 'gray',   bg: 'rgba(156,163,175,0.25)', border: '#9ca3af', dot: '#9ca3af' },
     { name: 'blue',   bg: 'rgba(59,130,246,0.2)',  border: '#3b82f6', dot: '#3b82f6' },
     { name: 'purple', bg: 'rgba(168,85,247,0.2)',  border: '#a855f7', dot: '#a855f7' },

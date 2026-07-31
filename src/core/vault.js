@@ -1,6 +1,6 @@
 import { VAULT_HANDLE_KEY } from "./constants.js";
 import { AppState } from './state.js';
-import { renderTabBar, saveCurrentTabState, createTab, createGroup, switchTab, deleteTab, closeTab } from './tabs.js';
+import { renderTabBar, saveCurrentTabState, createTab, createGroup, switchTab, deleteTab, closeTab, GROUP_COLORS } from './tabs.js';
 import { markdownEditor } from './dom.js';
 
   export async function doVaultRename(entry, newName, fallbackCb) {
@@ -199,37 +199,50 @@ import { markdownEditor } from './dom.js';
   }
 
   export async function openVaultFile(entry) {
-    let tab = AppState.tabs.find(t => t.id === entry.path);
-    if (!tab) {
-      tab = createTab('', entry.name);
-      tab.id = entry.path; // force path as ID
-      tab.handle = entry.handle;
-      
-      const segments = entry.path.split('/').filter(Boolean);
-      if (segments.length > 1) {
-        const folderName = segments[segments.length - 2];
-        let group = AppState.tabGroups.find(g => g.name === folderName);
-        if (!group) {
-          group = createGroup(folderName, GROUP_COLORS[Math.floor(Math.random() * GROUP_COLORS.length)].name);
+    try {
+      let tab = AppState.tabs.find(t => t.id === entry.path);
+      if (!tab) {
+        tab = createTab('', entry.name);
+        tab.id = entry.path; // force path as ID
+        tab.handle = entry.handle;
+        
+        const segments = entry.path.split('/').filter(Boolean);
+        if (segments.length > 1) {
+          const folderName = segments[segments.length - 2];
+          let group = AppState.tabGroups.find(g => g.name === folderName);
+          if (!group) {
+            const colorName = (GROUP_COLORS && GROUP_COLORS.length > 0)
+              ? GROUP_COLORS[Math.floor(Math.random() * GROUP_COLORS.length)].name
+              : 'purple';
+            group = createGroup(folderName, colorName);
+          }
+          tab.groupId = group.id;
         }
-        tab.groupId = group.id;
+
+        AppState.tabs.push(tab);
+      } else {
+        tab.handle = entry.handle;
       }
 
-      AppState.tabs.push(tab);
-    } else {
-      tab.handle = entry.handle;
-    }
-
-    if (tab.handle) {
-      try {
-        const file = await tab.handle.getFile();
-        tab.content = await file.text();
-      } catch (e) {
-        console.warn("Could not read file from handle:", e);
+      if (tab.handle) {
+        try {
+          if (tab.handle.queryPermission) {
+            const perm = await tab.handle.queryPermission({ mode: 'readwrite' });
+            if (perm !== 'granted' && tab.handle.requestPermission) {
+              await tab.handle.requestPermission({ mode: 'readwrite' });
+            }
+          }
+          const file = await tab.handle.getFile();
+          tab.content = await file.text();
+        } catch (e) {
+          console.warn("Could not read file from handle:", e);
+        }
       }
-    }
 
-    await switchTab(tab.id);
+      await switchTab(tab.id);
+    } catch (err) {
+      console.error("Failed to open vault file:", err);
+    }
   }
 
   export async function expandAllFolders() {

@@ -83,6 +83,9 @@ body {
   overflow: hidden;
   transition: width 0.1s linear;
 }
+.sidebar-explorer.is-resizing {
+  transition: none !important;
+}
 #sidebar-toc {
   border-right: 1px solid var(--border-color);
 }

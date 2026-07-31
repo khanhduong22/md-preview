@@ -3,13 +3,12 @@ import {
   wordCountElement,
   readingTimeElement,
 } from './dom.js';
-import { newTab, resetAllTabs } from "./tabs.js";
+import { newTab, resetAllTabs, closeAllTabs, saveCurrentTabState } from "./tabs.js";
 import {
   toggleSyncScrolling,
   setViewMode,
   syncScrollingEnabled,
 } from "../utils/viewMode.js";
-import { saveCurrentTabState } from "./tabs.js";
 
 export function initMobile() {
   const mobileMenuPanel = document.getElementById("mobile-menu-panel");
@@ -25,6 +24,7 @@ export function initMobile() {
   const mobileCopyMarkdown = document.getElementById("mobile-copy-markdown");
   const mobileThemeToggle = document.getElementById("mobile-theme-toggle");
   const mobileNewTabBtn = document.getElementById("mobile-new-tab-btn");
+  const mobileCloseAllTabsBtn = document.getElementById("mobile-close-all-tabs-btn");
   const mobileTabResetBtn = document.getElementById("mobile-tab-reset-btn");
   const mobileViewModeButtons = document.querySelectorAll(
     ".mobile-view-mode-btn",
@@ -101,6 +101,13 @@ export function initMobile() {
     mobileNewTabBtn.addEventListener("click", function () {
       newTab();
       closeMobileMenu();
+    });
+  }
+
+  if (mobileCloseAllTabsBtn) {
+    mobileCloseAllTabsBtn.addEventListener("click", function () {
+      closeMobileMenu();
+      closeAllTabs();
     });
   }
 

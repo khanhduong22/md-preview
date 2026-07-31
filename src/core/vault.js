@@ -149,6 +149,10 @@ import { markdownEditor } from './dom.js';
     
     document.getElementById('root-new-folder-btn').style.display = 'inline-flex';
     document.getElementById('root-new-file-btn').style.display = 'inline-flex';
+    const expandBtn = document.getElementById('expand-all-folders-btn');
+    const collapseBtn = document.getElementById('collapse-all-folders-btn');
+    if (expandBtn) expandBtn.style.display = 'inline-flex';
+    if (collapseBtn) collapseBtn.style.display = 'inline-flex';
     if(document.querySelector('.vault-action-divider')) document.querySelector('.vault-action-divider').style.display = 'block';
 
     const handleRootNewFile = async () => {
@@ -180,6 +184,17 @@ import { markdownEditor } from './dom.js';
     document.getElementById('root-new-file-btn').addEventListener('click', handleRootNewFile);
     document.getElementById('root-new-folder-btn').addEventListener('click', handleRootNewFolder);
 
+    if (expandBtn) {
+      const newExpand = expandBtn.cloneNode(true);
+      expandBtn.replaceWith(newExpand);
+      newExpand.addEventListener('click', expandAllFolders);
+    }
+    if (collapseBtn) {
+      const newCollapse = collapseBtn.cloneNode(true);
+      collapseBtn.replaceWith(newCollapse);
+      newCollapse.addEventListener('click', collapseAllFolders);
+    }
+
     await renderVaultTree();
   }
 
@@ -201,8 +216,41 @@ import { markdownEditor } from './dom.js';
       }
 
       AppState.tabs.push(tab);
+    } else {
+      tab.handle = entry.handle;
     }
+
+    if (tab.handle) {
+      try {
+        const file = await tab.handle.getFile();
+        tab.content = await file.text();
+      } catch (e) {
+        console.warn("Could not read file from handle:", e);
+      }
+    }
+
     await switchTab(tab.id);
+  }
+
+  export async function expandAllFolders() {
+    if (!AppState.vaultDirHandle) return;
+    async function collectFolders(dirHandle, path) {
+      for await (const [name, handle] of dirHandle.entries()) {
+        if (name.startsWith('.')) continue;
+        if (handle.kind === 'directory') {
+          const dirPath = path + '/' + name;
+          AppState.expandedVaultPaths.add(dirPath);
+          await collectFolders(handle, dirPath);
+        }
+      }
+    }
+    await collectFolders(AppState.vaultDirHandle, '');
+    await renderVaultTree();
+  }
+
+  export function collapseAllFolders() {
+    AppState.expandedVaultPaths.clear();
+    renderVaultTree();
   }
 
   export async function renderVaultTree() {
@@ -320,7 +368,7 @@ import { markdownEditor } from './dom.js';
                AppState.expandedVaultPaths.delete(entry.path);
             }
             node.querySelector('i').className = `bi bi-${childrenCont.classList.contains('expanded') ? 'folder2-open' : 'folder'}`;
-          } else if (entry.name.endsWith('.md')) {
+          } else if (entry.handle && entry.handle.kind === 'file') {
             await openVaultFile(entry);
             document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('active'));
             node.classList.add('active');

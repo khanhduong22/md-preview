@@ -633,12 +633,12 @@ import { demo30ChartsMarkdown } from '../utils/demo-charts.js';
     const tab = AppState.tabs.find(function(t) { return t.id === tabId; });
     if (!tab) return;
     
-    if (tab.handle && !tab.content) {
+    if (tab.handle) {
       try {
         const file = await tab.handle.getFile();
         tab.content = await file.text();
       } catch(e) {
-        tab.content = 'Error reading file';
+        if (!tab.content) tab.content = 'Error reading file';
       }
     }
     
@@ -820,6 +820,28 @@ import { demo30ChartsMarkdown } from '../utils/demo-charts.js';
 
     confirmBtn.addEventListener('click', doReset);
     cancelBtn.addEventListener('click', doCancel);
+  }
+
+  export function closeAllTabs() {
+    AppState.tabs = [];
+    AppState.tabGroups = [];
+    saveGroups();
+
+    if (AppState.localVaultMode) {
+      AppState.activeTabId = null;
+      markdownEditor.value = '';
+    } else {
+      const newT = createTab('', nextUntitledTitle());
+      AppState.tabs.push(newT);
+      AppState.activeTabId = newT.id;
+      markdownEditor.value = '';
+    }
+
+    saveActiveTabId(AppState.activeTabId);
+    saveTabsToStorage(AppState.tabs);
+    restoreViewMode('split');
+    renderMarkdown();
+    renderTabBar(AppState.tabs, AppState.activeTabId);
   }
 
 // ========================================

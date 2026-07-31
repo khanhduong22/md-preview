@@ -10,3 +10,5 @@ export const tocToggleBtn = document.getElementById("toc-toggle-btn");
 export const sidebarToc = document.getElementById("sidebar-toc");
 export const explorerToggleBtn = document.getElementById("explorer-toggle-btn");
 export const sidebarExplorer = document.getElementById("sidebar-explorer");
+export const tocResizer = document.getElementById("toc-resizer");
+export const sidebarResizer = document.getElementById("sidebar-resizer");

@@ -216,6 +216,9 @@
                             <div id="mobile-tab-list" class="mobile-tab-list" role="tablist" aria-label="Document tabs">
                                 <!-- Dynamically populated by JavaScript -->
                             </div>
+                            <button id="mobile-close-all-tabs-btn" class="tab-reset-btn mt-2 w-100" title="Close all tabs" aria-label="Close all tabs">
+                                <i class="bi bi-x-circle"></i> Close all tabs
+                            </button>
                             <button id="mobile-tab-reset-btn" class="tab-reset-btn mt-2 w-100" title="Reset all files" aria-label="Reset all files">
                                 <i class="bi bi-arrow-counterclockwise"></i> Reset all files
                             </button>
@@ -325,6 +328,9 @@
                 <button class="tag-filter-clear" id="tag-filter-clear">Show All</button>
               </div>
             </div>
+            <button class="tab-reset-btn" id="close-all-tabs-btn" title="Close all current tabs" aria-label="Close all current tabs">
+              <i class="bi bi-x-circle"></i> Close Tabs
+            </button>
             <button class="tab-reset-btn" id="tab-reset-btn" title="Reset all files" aria-label="Reset all files">
               <i class="bi bi-arrow-counterclockwise"></i> Reset
             </button>
@@ -386,6 +392,12 @@
                         </button>
                         <button id="root-new-file-btn" class="tool-button vault-action-btn" title="New Root File" style="display: none; padding: 4px 8px;">
                             <i class="bi bi-file-earmark-plus"></i>
+                        </button>
+                        <button id="expand-all-folders-btn" class="tool-button vault-action-btn" title="Expand All Folders" style="display: none; padding: 4px 8px;">
+                            <i class="bi bi-arrows-expand"></i>
+                        </button>
+                        <button id="collapse-all-folders-btn" class="tool-button vault-action-btn" title="Collapse All Folders" style="display: none; padding: 4px 8px;">
+                            <i class="bi bi-arrows-collapse"></i>
                         </button>
                         <div style="width: 1px; height: 16px; background: var(--border-color); margin: 0 4px;" class="vault-action-divider" style="display: none;"></div>
                         <button id="sync-vault-btn" class="tool-button" title="Sync Virtual Notes to Vault" style="display: none; padding: 4px 8px;">

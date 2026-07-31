@@ -1,11 +1,18 @@
 import { toggleSyncScrolling, currentViewMode } from "../utils/viewMode.js";
-import { newTab, closeTab, resetAllTabs, renderTabBar, saveCurrentTabState } from "./tabs.js";
+import { newTab, closeTab, closeAllTabs, resetAllTabs, renderTabBar, saveCurrentTabState } from "./tabs.js";
 import { AppState } from "./state.js";
 import { markdownEditor } from "./dom.js";
 import { renderVaultTree } from "./vault.js";
 import { closeMermaidModal } from "../utils/mermaidTools.js";
 
 export function initShortcuts() {
+  const closeAllTabsBtn = document.getElementById('close-all-tabs-btn');
+  if (closeAllTabsBtn) {
+    closeAllTabsBtn.addEventListener('click', function() {
+      closeAllTabs();
+    });
+  }
+
   const tabResetBtn = document.getElementById('tab-reset-btn');
   if (tabResetBtn) {
     tabResetBtn.addEventListener('click', function() {

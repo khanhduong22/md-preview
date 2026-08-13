@@ -21,6 +21,7 @@ const filesToDownload = [
   { url: 'https://viewer.diagrams.net/js/viewer-static.min.js', dest: 'viewer-static.min.js' },
   { url: 'https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js', dest: 'marked.min.js' },
   { url: 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js', dest: 'highlight.min.js' },
+  { url: 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/gherkin.min.js', dest: 'gherkin.min.js' },
   { url: 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js', dest: 'purify.min.js' },
   { url: 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js', dest: 'FileSaver.min.js' },
   { url: 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js', dest: 'html2pdf.bundle.min.js' },

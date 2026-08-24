@@ -62,7 +62,12 @@ export function initExtraShortcuts() {
               
               currentTab.handle = fileHandle;
               currentTab.title = name.replace(/\.md$/i, '');
-              currentTab.id = '/' + name;
+              const newTabId = AppState.vaultDirHandle.name + '/' + name;
+              currentTab.id = newTabId;
+              currentTab.path = newTabId;
+              AppState.activeTabId = newTabId;
+              saveActiveTabId(newTabId);
+              saveTabsToStorage(AppState.tabs);
               
               renderTabBar(AppState.tabs, AppState.activeTabId);
               await renderVaultTree();

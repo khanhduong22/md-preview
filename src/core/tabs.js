@@ -22,7 +22,23 @@ import { demo30ChartsMarkdown } from '../utils/demo-charts.js';
 
   export function saveTabsToStorage(tabsArr) {
     try {
-      localforage.setItem(STORAGE_KEY, tabsArr);
+      if (!Array.isArray(tabsArr)) return;
+      const cleanTabs = tabsArr.map(function(t) {
+        return {
+          id: t.id,
+          title: t.title,
+          content: t.content,
+          scrollPos: t.scrollPos || 0,
+          viewMode: t.viewMode || 'split',
+          pinned: !!t.pinned,
+          groupId: t.groupId || null,
+          createdAt: t.createdAt || Date.now(),
+          path: t.path || null
+        };
+      });
+      localforage.setItem(STORAGE_KEY, cleanTabs).catch(function(e) {
+        console.warn('Failed to save AppState.tabs to localforage:', e);
+      });
     } catch (e) {
       console.warn('Failed to save AppState.tabs to localforage:', e);
     }

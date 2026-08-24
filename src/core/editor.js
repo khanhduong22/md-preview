@@ -1,17 +1,48 @@
 import { markdownEditor } from "./dom.js";
-import { saveCurrentTabState } from "./tabs.js";
+import { saveCurrentTabState, saveTabsToStorage, renderTabBar } from "./tabs.js";
 import { debouncedRender } from "./render.js";
 import { loadHistory, saveShareSnapshot } from "./history.js";
 import { AppState } from "./state.js";
+import { queueVaultAutoSave } from "./autosave.js";
+import { generateSmartTitle, isUntitledTab } from "../utils/autoname.js";
 
 export function initEditor() {
   let autoSnapshotTimer = null;
   let saveTabStateTimeout = null;
+  let autoNamingTimeout = null;
+
+  async function checkAndApplyAutoNaming(content) {
+    const currentTab = AppState.tabs.find((t) => t.id === AppState.activeTabId);
+    if (!currentTab || !isUntitledTab(currentTab.title)) return;
+    if (!content || !content.trim()) return;
+
+    try {
+      const smartTitle = await generateSmartTitle(content, currentTab.title);
+      // Double check that tab still exists and is still untitled
+      const targetTab = AppState.tabs.find((t) => t.id === currentTab.id);
+      if (targetTab && isUntitledTab(targetTab.title) && smartTitle && smartTitle !== targetTab.title) {
+        targetTab.title = smartTitle;
+        saveTabsToStorage(AppState.tabs);
+        renderTabBar(AppState.tabs, AppState.activeTabId);
+      }
+    } catch (err) {
+      console.warn("Auto-naming error:", err);
+    }
+  }
 
   markdownEditor.addEventListener("input", function () {
     debouncedRender();
     clearTimeout(saveTabStateTimeout);
     saveTabStateTimeout = setTimeout(saveCurrentTabState, 500);
+
+    // Queue Vault auto-save (debounced 5s on typing pause)
+    queueVaultAutoSave(5000);
+
+    // Auto-naming for untitled tabs (debounced 800ms)
+    clearTimeout(autoNamingTimeout);
+    autoNamingTimeout = setTimeout(() => {
+      checkAndApplyAutoNaming(markdownEditor.value);
+    }, 800);
 
     // Auto-snapshot: debounced 5s after stopping typing
     clearTimeout(autoSnapshotTimer);
@@ -36,6 +67,14 @@ export function initEditor() {
         saveShareSnapshot(content, currentTab ? currentTab.title : "Untitled");
       }
     }, 5000);
+  });
+
+  // Instant auto-naming trigger on paste
+  markdownEditor.addEventListener("paste", function () {
+    setTimeout(() => {
+      checkAndApplyAutoNaming(markdownEditor.value);
+      queueVaultAutoSave(2000);
+    }, 100);
   });
 
   // Tab key handler to insert indentation instead of moving focus

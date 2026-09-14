@@ -133,7 +133,8 @@
                         <ul class="dropdown-menu" aria-labelledby="exportDropdown">
                             <li><a class="dropdown-item" href="#" id="export-md">Markdown (.md)</a></li>
                             <li><a class="dropdown-item" href="#" id="export-html">HTML</a></li>
-                            <li><a class="dropdown-item" href="#" id="export-pdf">PDF</a></li>
+                            <li><a class="dropdown-item" href="#" id="print-pdf"><i class="bi bi-printer me-1"></i>Print / Save as PDF (Vector & ATS-Ready)</a></li>
+                            <li><a class="dropdown-item" href="#" id="export-pdf"><i class="bi bi-file-earmark-pdf me-1"></i>PDF (Canvas Snapshot)</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="#" id="export-singlefile"><i class="bi bi-file-zip me-1"></i>Download Single File (.html)</a></li>
                             <li><hr class="dropdown-divider"></li>
@@ -274,8 +275,12 @@
                                 <i class="bi bi-file-earmark-code me-2"></i> Export as HTML
                             </button>
                             
-                            <button id="mobile-export-pdf" class="mobile-menu-item" title="Export as PDF">
-                                <i class="bi bi-file-earmark-pdf me-2"></i> Export as PDF
+                            <button id="mobile-print-pdf" class="mobile-menu-item" title="Print / Save as PDF (Vector)">
+                                <i class="bi bi-printer me-2"></i> Print / Save as PDF (Vector)
+                            </button>
+                            
+                            <button id="mobile-export-pdf" class="mobile-menu-item" title="Export as PDF (Canvas)">
+                                <i class="bi bi-file-earmark-pdf me-2"></i> Export as PDF (Canvas)
                             </button>
                             
                             <button id="mobile-copy-markdown" class="mobile-menu-item" title="Copy Markdown">

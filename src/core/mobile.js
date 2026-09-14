@@ -20,6 +20,7 @@ export function initMobile() {
   const mobileImportBtn = document.getElementById("mobile-import-btn");
   const mobileExportMd = document.getElementById("mobile-export-md");
   const mobileExportHtml = document.getElementById("mobile-export-html");
+  const mobilePrintPdf = document.getElementById("mobile-print-pdf");
   const mobileExportPdf = document.getElementById("mobile-export-pdf");
   const mobileCopyMarkdown = document.getElementById("mobile-copy-markdown");
   const mobileThemeToggle = document.getElementById("mobile-theme-toggle");
@@ -83,6 +84,8 @@ export function initMobile() {
     mobileExportMd.addEventListener("click", () => exportMd.click());
   if (mobileExportHtml && exportHtml)
     mobileExportHtml.addEventListener("click", () => exportHtml.click());
+  if (mobilePrintPdf)
+    mobilePrintPdf.addEventListener("click", () => window.print());
   if (mobileExportPdf && exportPdf)
     mobileExportPdf.addEventListener("click", () => exportPdf.click());
   if (mobileCopyMarkdown && copyMarkdownButton)

@@ -7,7 +7,6 @@ export function initExportSetup() {
   const exportMd = document.getElementById("export-md");
   const exportHtml = document.getElementById("export-html");
   const exportPdf = document.getElementById("export-pdf");
-  const printPdf = document.getElementById("print-pdf");
   
   const copyMarkdownButton = document.getElementById("copy-markdown-button");
 
@@ -162,13 +161,6 @@ exportPdf.addEventListener("click", async function () {
   const currentTheme = document.documentElement.getAttribute("data-theme");
   await exportToPdf(markdownEditor.value, exportPdf, currentTheme);
 });
-
-if (printPdf) {
-  printPdf.addEventListener("click", function (e) {
-    e.preventDefault();
-    window.print();
-  });
-}
 
 copyMarkdownButton.addEventListener("click", function () {
   try {

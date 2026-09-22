@@ -198,11 +198,12 @@ test.describe('Application Features', () => {
     await shareBtn.click();
     await page.waitForTimeout(500);
 
-    // 3. Verify the URL hash contains the share string, mode=preview, and hide=1
+    // 3. Verify the URL hash contains the share string, mode=preview, hide=1, and share=1
     const url = page.url();
     expect(url).toContain('#share=');
     expect(url).toContain('mode=preview');
     expect(url).toContain('hide=1');
+    expect(url).toContain('share=1');
 
     // Verify sender tab did not enter focus mode
     await expect(page.locator('body')).not.toHaveClass(/focus-mode/);
@@ -263,6 +264,67 @@ test.describe('Application Features', () => {
     await newPage.close();
   });
 
+  test('should not auto-start tour or show privacy banner for first-time visitor opening a shared link', async ({ page, browser }) => {
+    // 1. Generate a share URL from current active page
+    const editor = page.locator('#markdown-editor');
+    await editor.fill('# First Time Visitor Shared Note\nTesting clean first-time view.');
+    await page.waitForTimeout(200);
+
+    const shareBtn = page.locator('#share-button');
+    await shareBtn.click();
+    await page.waitForTimeout(500);
+
+    const shareUrl = page.url();
+    expect(shareUrl).toContain('#share=');
+    expect(shareUrl).toContain('share=1');
+
+    // 2. Open clean browser context simulating a first-time visitor (no localStorage)
+    const cleanContext = await browser.newContext();
+    const cleanPage = await cleanContext.newPage();
+
+    await cleanPage.goto(shareUrl);
+    await cleanPage.waitForLoadState('networkidle');
+
+    // Verify localStorage has no tour or privacy keys
+    const hasSeenTour = await cleanPage.evaluate(() => localStorage.getItem('hasSeenTour'));
+    const privacyDismissed = await cleanPage.evaluate(() => localStorage.getItem('kido-privacy-dismissed'));
+    expect(hasSeenTour).toBeNull();
+    expect(privacyDismissed).toBeNull();
+
+    // 3. Wait for >1000ms (to ensure the old tour timer would have fired)
+    await cleanPage.waitForTimeout(1500);
+
+    // 4. Assert driver popover is NOT present
+    const driverPopover = cleanPage.locator('.driver-popover');
+    await expect(driverPopover).toHaveCount(0);
+
+    // 5. Assert privacy notice is NOT visible
+    const privacyNotice = cleanPage.locator('#privacy-notice');
+    await expect(privacyNotice).not.toBeVisible();
+
+    // 6. Assert view mode remains preview-only (not forced back to split)
+    const contentContainer = cleanPage.locator('.content-container');
+    await expect(contentContainer).toHaveClass(/view-preview-only/);
+    await expect(contentContainer).not.toHaveClass(/view-split/);
+
+    // 7. Assert body remains in focus-mode
+    await expect(cleanPage.locator('body')).toHaveClass(/focus-mode/);
+
+    // 8. Verify manual tour via #tour-btn still works if user explicitly triggers it
+    await cleanPage.locator('#header-reveal-zone').hover();
+    await cleanPage.waitForTimeout(300);
+    const exitFocusBtn = cleanPage.locator('#exit-focus-btn');
+    await exitFocusBtn.click();
+    await expect(cleanPage.locator('body')).not.toHaveClass(/focus-mode/);
+
+    const tourBtn = cleanPage.locator('#tour-btn');
+    await tourBtn.click();
+    await cleanPage.waitForTimeout(300);
+    await expect(cleanPage.locator('.driver-popover')).toBeVisible();
+
+    await cleanContext.close();
+  });
+
   test('should verify share mode and hide mode hash helper functions', async ({ page }) => {
     const results = await page.evaluate(async () => {
       const { isShareHideModeFromHash, getShareModeFromHash } = await import('/src/utils/share.js');
@@ -291,6 +353,12 @@ test.describe('Application Features', () => {
       window.location.hash = '#share=test';
       const hideDefault = isShareHideModeFromHash();
 
+      window.location.hash = '#mode=preview&share=1';
+      const share1 = isShareHideModeFromHash();
+
+      window.location.hash = '#mode=preview&share=0';
+      const share0 = isShareHideModeFromHash();
+
       window.location.hash = '';
 
       return {
@@ -303,6 +371,8 @@ test.describe('Application Features', () => {
         modeDefault,
         hideTrue,
         hideDefault,
+        share1,
+        share0,
       };
     });
 
@@ -315,6 +385,8 @@ test.describe('Application Features', () => {
     expect(results.modeDefault).toBe('preview');
     expect(results.hideTrue).toBe(true);
     expect(results.hideDefault).toBe(true);
+    expect(results.share1).toBe(true);
+    expect(results.share0).toBe(false);
   });
 
   test('should reset all tabs when reset button is clicked and confirmed', async ({ page }) => {

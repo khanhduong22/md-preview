@@ -2,7 +2,13 @@ export function initPrivacyNotice() {
   const privacyNotice = document.getElementById("privacy-notice");
   const privacyDismiss = document.getElementById("privacy-dismiss");
 
-  if (privacyNotice && !localStorage.getItem("kido-privacy-dismissed")) {
+  const isShareLink =
+    window.location.hash.includes("share=") ||
+    window.location.href.includes("share=");
+
+  if (isShareLink && privacyNotice) {
+    privacyNotice.style.display = "none";
+  } else if (privacyNotice && !localStorage.getItem("kido-privacy-dismissed")) {
     privacyNotice.style.display = "block";
   }
 

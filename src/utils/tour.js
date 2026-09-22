@@ -185,6 +185,13 @@ export function initTour() {
     tourBtn.addEventListener("click", startTour);
   }
 
+  const isShareLink =
+    window.location.hash.includes("share=") ||
+    window.location.href.includes("share=");
+  if (isShareLink) {
+    return;
+  }
+
   const hasSeenTour = localStorage.getItem("hasSeenTour");
   if (!hasSeenTour && window.innerWidth >= 768) {
     setTimeout(() => {

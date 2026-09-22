@@ -57,7 +57,7 @@ function copyShareUrl(btn) {
     return;
   }
 
-  const shareHash = `share=${encoded}&mode=preview&hide=1`;
+  const shareHash = `share=${encoded}&mode=preview&hide=1&share=1`;
   const shareUrl =
     window.location.origin + window.location.pathname + "#" + shareHash;
   const tooLarge = shareUrl.length > MAX_SHARE_URL_LENGTH;
@@ -174,18 +174,31 @@ function decodeShareHash() {
 }
 
 export function isShareHideModeFromHash() {
+  if (typeof window === "undefined") return false;
   const hash = window.location.hash || "";
   const href = window.location.href || "";
-  const urlSource = hash || href;
+  const search = window.location.search || "";
+  const urlSource = `${hash}&${search}&${href}`;
 
-  const match = urlSource.match(/(?:&|\?)(?:hide|focus)=([^&]+)/);
+  const match = urlSource.match(/(?:&|\?|#)(?:hide|focus)=([^&]+)/);
   if (match) {
     const val = decodeURIComponent(match[1]).toLowerCase();
     return val === "1" || val === "true";
   }
 
+  const shareParamMatch = urlSource.match(/(?:&|\?)(?:share)=([^&]+)/);
+  if (shareParamMatch) {
+    const val = decodeURIComponent(shareParamMatch[1]).toLowerCase();
+    return val === "1" || val === "true";
+  }
+
   // If not explicitly set but #share= is in the URL, return true
   if (hash.includes("share=") || href.includes("#share=") || href.includes("%23share=")) {
+    const directShareMatch = urlSource.match(/(?:#|%23)share=([^&]+)/);
+    if (directShareMatch) {
+      const val = decodeURIComponent(directShareMatch[1]).toLowerCase();
+      if (val === "0" || val === "false") return false;
+    }
     return true;
   }
 

@@ -3,14 +3,16 @@ import { markdownEditor } from '../core/dom.js';
 import { renderMarkdown } from '../core/render.js';
 import { AppState } from '../core/state.js';
 import { createTab, saveTabsToStorage, saveActiveTabId, renderTabBar } from '../core/tabs.js';
-import { restoreViewMode, currentViewMode } from './viewMode.js';
+import { restoreViewMode } from './viewMode.js';
 import { saveShareSnapshot } from '../core/history.js';
+import { setFocusMode } from './focusMode.js';
 
 // ============================================
 // Share via URL (pako compression + base64url)
 // ============================================
 
 const MAX_SHARE_URL_LENGTH = 32000;
+let isInternalShareUpdate = false;
 
 function encodeMarkdownForShare(text) {
   const compressed = pako.deflate(new TextEncoder().encode(text));
@@ -55,8 +57,9 @@ function copyShareUrl(btn) {
     return;
   }
 
+  const shareHash = `share=${encoded}&mode=preview&hide=1`;
   const shareUrl =
-    window.location.origin + window.location.pathname + "#share=" + encoded + "&mode=" + currentViewMode;
+    window.location.origin + window.location.pathname + "#" + shareHash;
   const tooLarge = shareUrl.length > MAX_SHARE_URL_LENGTH;
 
   const originalHTML = btn.innerHTML;
@@ -64,7 +67,13 @@ function copyShareUrl(btn) {
 
   function onCopied() {
     if (!tooLarge) {
-      window.location.hash = "share=" + encoded + "&mode=" + currentViewMode;
+      if (window.location.hash !== "#" + shareHash) {
+        isInternalShareUpdate = true;
+        window.location.hash = shareHash;
+        setTimeout(() => {
+          isInternalShareUpdate = false;
+        }, 100);
+      }
     }
     btn.innerHTML = copiedHTML;
     setTimeout(() => {
@@ -111,6 +120,10 @@ export function initShare() {
 
   // Handle hash changes if the user clicks a share link while the app is already open
   window.addEventListener("hashchange", () => {
+    if (isInternalShareUpdate) {
+      isInternalShareUpdate = false;
+      return;
+    }
     if (window.location.hash.startsWith("#share=")) {
       loadFromShareHashChange();
     }
@@ -160,9 +173,29 @@ function decodeShareHash() {
   }
 }
 
+export function isShareHideModeFromHash() {
+  const hash = window.location.hash || "";
+  const href = window.location.href || "";
+  const urlSource = hash || href;
+
+  const match = urlSource.match(/(?:&|\?)(?:hide|focus)=([^&]+)/);
+  if (match) {
+    const val = decodeURIComponent(match[1]).toLowerCase();
+    return val === "1" || val === "true";
+  }
+
+  // If not explicitly set but #share= is in the URL, return true
+  if (hash.includes("share=") || href.includes("#share=") || href.includes("%23share=")) {
+    return true;
+  }
+
+  return false;
+}
+
 export function getShareModeFromHash() {
-  const match = window.location.hash.match(/(?:&|\?)mode=([a-zA-Z]+)/);
-  return match ? match[1] : "split";
+  const hash = window.location.hash || window.location.href || "";
+  const match = hash.match(/(?:&|\?)mode=([a-zA-Z]+)/);
+  return match ? match[1] : "preview";
 }
 
 /**
@@ -177,6 +210,7 @@ function loadFromShareHashChange() {
   AppState.activeTabId = shareTab.id;
   markdownEditor.value = shareContent;
   restoreViewMode(getShareModeFromHash());
+  setFocusMode(isShareHideModeFromHash());
   renderMarkdown();
   saveTabsToStorage(AppState.tabs);
   saveActiveTabId(AppState.activeTabId);

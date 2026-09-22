@@ -198,9 +198,14 @@ test.describe('Application Features', () => {
     await shareBtn.click();
     await page.waitForTimeout(500);
 
-    // 3. Verify the URL hash contains the share string
+    // 3. Verify the URL hash contains the share string, mode=preview, and hide=1
     const url = page.url();
     expect(url).toContain('#share=');
+    expect(url).toContain('mode=preview');
+    expect(url).toContain('hide=1');
+
+    // Verify sender tab did not enter focus mode
+    await expect(page.locator('body')).not.toHaveClass(/focus-mode/);
 
     // 4. Open a clean page with the shared URL
     const newPage = await page.context().newPage();
@@ -217,8 +222,99 @@ test.describe('Application Features', () => {
 
     const activeTab = newPage.locator('.tab-item.active');
     await expect(activeTab).toContainText('Shared Note');
-    
+
+    // 6. Verify shared note enters focus mode and preview mode automatically
+    await expect(newPage.locator('body')).toHaveClass(/focus-mode/);
+    await expect(newPage.locator('.content-container')).toHaveClass(/view-preview-only/);
+
+    // 7. Verify #exit-focus-btn is present and functional
+    const exitFocusBtn = newPage.locator('#exit-focus-btn');
+    await expect(exitFocusBtn).toBeAttached();
+    await newPage.locator('#header-reveal-zone').hover();
+    await newPage.waitForTimeout(500);
+    await exitFocusBtn.click();
+    await expect(newPage.locator('body')).not.toHaveClass(/focus-mode/);
+
     await newPage.close();
+  });
+
+  test('should respect hide=0 in share URL and not enter focus mode', async ({ page }) => {
+    const editor = page.locator('#markdown-editor');
+    await editor.fill('Testing share with hide=0');
+    await page.waitForTimeout(200);
+
+    const shareBtn = page.locator('#share-button');
+    await shareBtn.click();
+    await page.waitForTimeout(500);
+
+    let url = page.url();
+    url = url.replace('hide=1', 'hide=0');
+
+    const newPage = await page.context().newPage();
+    await newPage.addInitScript(() => {
+      localStorage.setItem('hasSeenTour', 'true');
+      localStorage.setItem('kido-privacy-dismissed', '1');
+    });
+    await newPage.goto(url);
+    await newPage.waitForLoadState('networkidle');
+
+    await expect(newPage.locator('body')).not.toHaveClass(/focus-mode/);
+    await expect(newPage.locator('.content-container')).toHaveClass(/view-preview-only/);
+    await newPage.close();
+  });
+
+  test('should verify share mode and hide mode hash helper functions', async ({ page }) => {
+    const results = await page.evaluate(async () => {
+      const { isShareHideModeFromHash, getShareModeFromHash } = await import('/src/utils/share.js');
+      const { setFocusMode, getIsFocusMode, toggleFocusMode } = await import('/src/utils/focusMode.js');
+
+      // Test focusMode helpers
+      setFocusMode(true);
+      const isFocus1 = getIsFocusMode();
+      const bodyHasFocus1 = document.body.classList.contains('focus-mode');
+
+      toggleFocusMode();
+      const isFocus2 = getIsFocusMode();
+      const bodyHasFocus2 = document.body.classList.contains('focus-mode');
+
+      setFocusMode(false);
+
+      // Test hash parsing logic by temporarily changing hash
+      window.location.hash = '#share=test&mode=split&hide=0';
+      const modeSplit = getShareModeFromHash();
+      const hide0 = isShareHideModeFromHash();
+
+      window.location.hash = '#share=test&hide=true';
+      const modeDefault = getShareModeFromHash();
+      const hideTrue = isShareHideModeFromHash();
+
+      window.location.hash = '#share=test';
+      const hideDefault = isShareHideModeFromHash();
+
+      window.location.hash = '';
+
+      return {
+        isFocus1,
+        bodyHasFocus1,
+        isFocus2,
+        bodyHasFocus2,
+        modeSplit,
+        hide0,
+        modeDefault,
+        hideTrue,
+        hideDefault,
+      };
+    });
+
+    expect(results.isFocus1).toBe(true);
+    expect(results.bodyHasFocus1).toBe(true);
+    expect(results.isFocus2).toBe(false);
+    expect(results.bodyHasFocus2).toBe(false);
+    expect(results.modeSplit).toBe('split');
+    expect(results.hide0).toBe(false);
+    expect(results.modeDefault).toBe('preview');
+    expect(results.hideTrue).toBe(true);
+    expect(results.hideDefault).toBe(true);
   });
 
   test('should reset all tabs when reset button is clicked and confirmed', async ({ page }) => {

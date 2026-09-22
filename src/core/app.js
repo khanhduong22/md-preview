@@ -13,7 +13,8 @@ import { restoreViewMode } from "../utils/viewMode.js";
 import { initHistory } from "./history.js";
 import { demo30ChartsMarkdown } from "../utils/demo-charts.js";
 import { sampleMarkdown } from "../utils/sample.js";
-import { decodeShareHash, getShareModeFromHash } from "../utils/share.js";
+import { decodeShareHash, getShareModeFromHash, isShareHideModeFromHash } from "../utils/share.js";
+import { setFocusMode } from "../utils/focusMode.js";
 import { AppState } from "./state.js";
 import { renderMarkdown } from "./render.js";
 import { markdownEditor } from "./dom.js";
@@ -91,6 +92,9 @@ export async function bootstrapApp() {
     AppState.activeTabId = shareTab.id;
     markdownEditor.value = shareContent;
     restoreViewMode(getShareModeFromHash());
+    if (isShareHideModeFromHash()) {
+      setFocusMode(true);
+    }
     saveTabsToStorage(AppState.tabs);
     saveActiveTabId(AppState.activeTabId);
   } else {

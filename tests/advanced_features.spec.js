@@ -125,7 +125,7 @@ test.describe('Advanced Features E2E Suite', () => {
   test('should trigger PDF download using mocked canvas/pdf engines', async ({ page }) => {
     // Fill content
     const editor = page.locator('#markdown-editor');
-    await editor.fill('# Title\n\nThis is some content for A4 export page-break testing.');
+    await editor.fill('# Title\n\nThis is some content for A4 export page-break testing with [TradingView Script](https://tradingview.com/script) and [First Prize](https://example.com/prize).');
     await page.waitForTimeout(500);
 
     // Overwrite the engines using page.evaluate after page load finishes
@@ -136,12 +136,18 @@ test.describe('Advanced Features E2E Suite', () => {
       window.mermaid = {
         run: async () => {}
       };
+      const recordedLinks = [];
+      window.recordedLinks = recordedLinks;
       window.jspdf = {
         jsPDF: function () {
           return {
             internal: { pageSize: { getWidth: () => 210, getHeight: () => 297 } },
             addPage: () => {},
             addImage: () => {},
+            setPage: (pageNum) => {},
+            link: (x, y, w, h, options) => {
+              recordedLinks.push({ x, y, w, h, options });
+            },
             save: function (name) {
               const blob = new Blob(['%PDF-1.4 mock content'], { type: 'application/pdf' });
               const url = URL.createObjectURL(blob);
@@ -174,6 +180,74 @@ test.describe('Advanced Features E2E Suite', () => {
 
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe('document.pdf');
+
+    const recordedLinks = await page.evaluate(() => window.recordedLinks);
+    expect(recordedLinks.length).toBeGreaterThan(0);
+    const scriptLink = recordedLinks.find(
+      (l) => l.options && l.options.url && l.options.url.includes('tradingview.com/script')
+    );
+    expect(scriptLink).toBeDefined();
+    expect(scriptLink.x).toBeGreaterThan(0);
+    expect(scriptLink.y).toBeGreaterThan(0);
+    expect(scriptLink.w).toBeGreaterThan(0);
+    expect(scriptLink.h).toBeGreaterThan(0);
+
+    const prizeLink = recordedLinks.find(
+      (l) => l.options && l.options.url && l.options.url.includes('example.com/prize')
+    );
+    expect(prizeLink).toBeDefined();
+    expect(prizeLink.x).toBeGreaterThan(0);
+    expect(prizeLink.y).toBeGreaterThan(0);
+    expect(prizeLink.w).toBeGreaterThan(0);
+    expect(prizeLink.h).toBeGreaterThan(0);
+  });
+
+  test('should annotate PDF hyperlinks and properly skip javascript/empty links', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.left = '0px';
+      container.style.top = '0px';
+      container.style.width = '1000px';
+      container.innerHTML = `
+        <p><a href="https://tradingview.com/script">TradingView Script</a></p>
+        <p><a href="javascript:void(0)">JS Action</a></p>
+        <p><a href="">Empty Link</a></p>
+        <p><a href="   ">Whitespace Link</a></p>
+        <p><a href="https://example.com/prize">First Prize</a></p>
+      `;
+      document.body.appendChild(container);
+
+      const recordedLinks = [];
+      const setPages = [];
+      const mockPdf = {
+        setPage: (p) => setPages.push(p),
+        link: (x, y, w, h, options) => {
+          recordedLinks.push({ x, y, w, h, options });
+        }
+      };
+
+      window.annotatePdfLinks(mockPdf, container, {
+        margin: 15,
+        contentWidth: 180,
+        pageHeight: 297,
+        pagesCount: 2
+      });
+
+      document.body.removeChild(container);
+      return { recordedLinks, setPages };
+    });
+
+    expect(result.recordedLinks.length).toBe(2);
+    expect(result.recordedLinks.map((l) => l.options.url)).toEqual([
+      'https://tradingview.com/script',
+      'https://example.com/prize'
+    ]);
+    expect(result.recordedLinks[0].x).toBeGreaterThan(0);
+    expect(result.recordedLinks[0].y).toBeGreaterThan(0);
+    expect(result.recordedLinks[0].w).toBeGreaterThan(0);
+    expect(result.recordedLinks[0].h).toBeGreaterThan(0);
+    expect(result.setPages).toContain(1);
   });
 
   test('should mock Native File System Vault explorer, handle file actions, and sync virtual tabs', async ({ page }) => {

@@ -204,6 +204,61 @@ export function handleOversizedElements(oversizedElements, pageHeightPx) {
   }
 }
 
+export function annotatePdfLinks(pdf, tempElement, { margin, contentWidth, pageHeight, pagesCount }) {
+  if (!pdf || !tempElement) return;
+  const tempRect = tempElement.getBoundingClientRect();
+  if (!tempRect || tempRect.width <= 0) return;
+
+  const pxToMm = contentWidth / tempRect.width;
+  const pageContentHeight = pageHeight - margin * 2;
+  if (pageContentHeight <= 0) return;
+
+  const linkElements = tempElement.querySelectorAll('a[href]');
+
+  for (const linkEl of linkElements) {
+    const rawHref = linkEl.getAttribute('href');
+    if (!rawHref) continue;
+    const trimmedHref = rawHref.trim();
+    if (!trimmedHref || trimmedHref.toLowerCase().startsWith('javascript:')) continue;
+
+    let href = trimmedHref;
+    try {
+      href = new URL(trimmedHref, window.location.href).href;
+    } catch {
+      href = trimmedHref;
+    }
+
+    const clientRects = linkEl.getClientRects();
+    const rects = (clientRects && clientRects.length > 0) ? Array.from(clientRects) : [linkEl.getBoundingClientRect()];
+
+    for (const rect of rects) {
+      if (!rect || rect.width <= 0 || rect.height <= 0) continue;
+
+      const relLeft = rect.left - tempRect.left;
+      const relTop = rect.top - tempRect.top;
+      const xMm = margin + (relLeft * pxToMm);
+      const wMm = rect.width * pxToMm;
+      const yTotalMm = relTop * pxToMm;
+      const hMm = rect.height * pxToMm;
+      const pageIndex = Math.floor(yTotalMm / pageContentHeight);
+      const yOnPageMm = margin + (yTotalMm - pageIndex * pageContentHeight);
+
+      if (pageIndex >= 0 && pageIndex < pagesCount) {
+        if (typeof pdf.setPage === 'function') {
+          pdf.setPage(pageIndex + 1);
+        }
+        if (typeof pdf.link === 'function') {
+          pdf.link(xMm, yOnPageMm, wMm, hMm, { url: href });
+        }
+      }
+    }
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.annotatePdfLinks = annotatePdfLinks;
+}
+
 export async function exportToPdf(markdown, exportPdfBtn, currentTheme) {
   try {
     const originalText = exportPdfBtn.innerHTML;
@@ -387,6 +442,8 @@ export async function exportToPdf(markdown, exportPdfBtn, currentTheme) {
       const imgData = pageCanvas.toDataURL('image/png');
       pdf.addImage(imgData, 'PNG', margin, margin, contentWidth, destHeight);
     }
+
+    annotatePdfLinks(pdf, tempElement, { margin, contentWidth, pageHeight, pagesCount });
 
     pdf.save("document.pdf");
     statusText.textContent = 'Download successful!';

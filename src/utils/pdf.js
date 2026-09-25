@@ -349,7 +349,7 @@ export async function exportToPdf(markdown, exportPdfBtn, currentTheme) {
         window.html2canvas(tempElement, {
           scale: 2,
           useCORS: true,
-          allowTaint: true,
+          allowTaint: false,
           logging: false,
           windowWidth: 1000,
           windowHeight: tempElement.scrollHeight
@@ -372,20 +372,34 @@ export async function exportToPdf(markdown, exportPdfBtn, currentTheme) {
     }
 
     for (let page = 0; page < pagesCount; page++) {
-      if (page > 0) pdf.addPage();
       const sourceY = page * (pageHeight - margin * 2) * scaleFactor;
-      const sourceHeight = Math.min(canvas.height - sourceY, (pageHeight - margin * 2) * scaleFactor);
+      const remainingHeight = canvas.height - sourceY;
+      if (remainingHeight <= 1) {
+        break;
+      }
+
+      const sourceHeight = Math.min(remainingHeight, (pageHeight - margin * 2) * scaleFactor);
+      if (sourceHeight <= 1) {
+        break;
+      }
+
+      if (page > 0) {
+        pdf.addPage();
+      }
+
       const destHeight = sourceHeight / scaleFactor;
 
       const pageCanvas = document.createElement('canvas');
       pageCanvas.width = canvas.width;
-      pageCanvas.height = sourceHeight;
+      pageCanvas.height = Math.max(1, Math.round(sourceHeight));
 
       const ctx = pageCanvas.getContext('2d');
-      ctx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
+      ctx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, Math.max(1, Math.round(sourceHeight)));
 
       const imgData = pageCanvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', margin, margin, contentWidth, destHeight);
+      if (imgData && imgData.startsWith('data:image/png') && imgData.length > 50) {
+        pdf.addImage(imgData, 'PNG', margin, margin, contentWidth, destHeight);
+      }
     }
 
     pdf.save("document.pdf");

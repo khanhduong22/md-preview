@@ -62,17 +62,27 @@ renderer.code = function (code, language) {
     if (window.plantumlEncoder) {
       const encoded = window.plantumlEncoder.encode(code);
       return `<div class="plantuml-container" style="text-align: center; margin: 1.5em 0;">
-                <img src="https://www.plantuml.com/plantuml/svg/${encoded}" alt="PlantUML Diagram" style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+                <img src="https://www.plantuml.com/plantuml/svg/${encoded}" alt="PlantUML Diagram" style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'alert alert-warning py-2 mb-0\\'><small><i class=\\'bi bi-exclamation-triangle me-1\\'></i>Unable to render PlantUML diagram offline or syntax error.</small></div>';" />
               </div>`;
     }
   }
 
   if (language === "drawio") {
-    // Escape quotes to put XML in data-mxgraph attribute
-    const escapedXml = code.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const graphConfig = `{"highlight":"#0366d6","nav":true,"resize":true,"toolbar":"zoom layers tags lightbox","edit":"_blank","xml":"${escapedXml}"}`;
+    const configObj = {
+      highlight: "#0366d6",
+      nav: true,
+      resize: true,
+      toolbar: "zoom layers tags lightbox",
+      edit: "_blank",
+      xml: code
+    };
+    const jsonStr = JSON.stringify(configObj);
+    const safeAttr = jsonStr
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
     return `<div class="mxgraph-container" style="text-align: center; margin: 1.5em 0;">
-              <div class="mxgraph" style="max-width:100%;border:1px solid var(--border-color);border-radius:6px;background:var(--preview-bg);" data-mxgraph="${graphConfig}"></div>
+              <div class="mxgraph" style="max-width:100%;border:1px solid var(--border-color);border-radius:6px;background:var(--preview-bg);" data-mxgraph="${safeAttr}"></div>
             </div>`;
   }
 

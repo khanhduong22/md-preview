@@ -100,6 +100,16 @@ export async function persistVirtualTabToVault(tab) {
 }
 
 /**
+ * Cancel any pending vault auto-save debounce
+ */
+export function cancelVaultAutoSave() {
+  if (autoSaveDebounceTimer) {
+    clearTimeout(autoSaveDebounceTimer);
+    autoSaveDebounceTimer = null;
+  }
+}
+
+/**
  * Trigger a debounced auto-save to vault (e.g. after typing pause)
  * @param {number} [delay=5000]
  */
@@ -114,7 +124,7 @@ export function queueVaultAutoSave(delay = 5000) {
     if (currentTab.handle) {
       await saveCurrentTabState(true);
       currentTab.lastVaultSave = Date.now();
-    } else if (currentTab.content && currentTab.content.trim().length > 0) {
+    } else if (!currentTab.path && currentTab.content && currentTab.content.trim().length > 0) {
       await persistVirtualTabToVault(currentTab);
     }
   }, delay);
@@ -137,7 +147,7 @@ export function initAutoSave() {
         currentTab.lastVaultSave = Date.now();
         console.log("Vault file periodically auto-saved");
       }
-    } else {
+    } else if (!currentTab.path) {
       // Virtual file with content in vault mode: auto save to vault
       const content = markdownEditor ? markdownEditor.value : (currentTab.content || '');
       if (content && content.trim().length > 0) {

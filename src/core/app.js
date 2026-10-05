@@ -10,7 +10,7 @@ import {
 } from "./tabs.js";
 import { initVault } from "./vault.js";
 import { restoreViewMode } from "../utils/viewMode.js";
-import { initHistory } from "./history.js";
+import { initHistory, initHistoryUI } from "./history.js";
 import { demo30ChartsMarkdown } from "../utils/demo-charts.js";
 import { sampleMarkdown } from "../utils/sample.js";
 import { decodeShareHash, getShareModeFromHash, isShareHideModeFromHash } from "../utils/share.js";
@@ -21,7 +21,7 @@ import { markdownEditor } from "./dom.js";
 import { initMobile } from "./mobile.js";
 import { initShortcuts, initExtraShortcuts } from "./shortcuts.js";
 import { initDragDrop } from "./dragDrop.js";
-import { initExportSetup, initExportEvents } from "../utils/export.js";
+import { initExportSetup } from "../utils/export.js";
 import { initBackupSetup } from "../utils/backup.js";
 import { initTagsSetup } from "../utils/tags.js";
 import { initShare } from "../utils/share.js";
@@ -134,8 +134,8 @@ export async function bootstrapApp() {
   initExtraShortcuts();
   initDragDrop();
   initExportSetup();
-  initExportEvents();
   initBackupSetup();
   initTagsSetup();
   initShare();
+  initHistoryUI();
 }

@@ -205,12 +205,16 @@ export function handleOversizedElements(oversizedElements, pageHeightPx) {
 }
 
 export async function exportToPdf(markdown, exportPdfBtn, currentTheme) {
+  let progressContainer = null;
+  let tempElement = null;
+  const originalText = exportPdfBtn ? exportPdfBtn.innerHTML : '';
   try {
-    const originalText = exportPdfBtn.innerHTML;
-    exportPdfBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
-    exportPdfBtn.disabled = true;
+    if (exportPdfBtn) {
+      exportPdfBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
+      exportPdfBtn.disabled = true;
+    }
 
-    const progressContainer = document.createElement('div');
+    progressContainer = document.createElement('div');
     progressContainer.style.position = 'fixed';
     progressContainer.style.top = '50%';
     progressContainer.style.left = '50%';
@@ -233,7 +237,7 @@ export async function exportToPdf(markdown, exportPdfBtn, currentTheme) {
       ADD_ATTR: ['id', 'class', 'style', 'viewBox', 'd', 'fill', 'stroke', 'transform', 'marker-end', 'marker-start']
     });
 
-    const tempElement = document.createElement("div");
+    tempElement = document.createElement("div");
     tempElement.className = "markdown-body pdf-export";
     tempElement.innerHTML = sanitizedHtml;
     tempElement.style.padding = "20px";
@@ -404,17 +408,31 @@ export async function exportToPdf(markdown, exportPdfBtn, currentTheme) {
 
     pdf.save("document.pdf");
     statusText.textContent = 'Download successful!';
-    setTimeout(() => document.body.removeChild(progressContainer), 1500);
-    document.body.removeChild(tempElement);
-    exportPdfBtn.innerHTML = originalText;
-    exportPdfBtn.disabled = false;
+    setTimeout(() => {
+      if (progressContainer && progressContainer.parentNode) {
+        progressContainer.parentNode.removeChild(progressContainer);
+      }
+    }, 1500);
+    if (tempElement && tempElement.parentNode) {
+      tempElement.parentNode.removeChild(tempElement);
+    }
+    if (exportPdfBtn) {
+      exportPdfBtn.innerHTML = originalText;
+      exportPdfBtn.disabled = false;
+    }
 
   } catch (error) {
     console.error("PDF export failed:", error);
     alert("PDF export failed: " + error.message);
-    exportPdfBtn.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> Export';
-    exportPdfBtn.disabled = false;
-    const progressContainer = document.querySelector('div[style*="Generating PDF"]');
-    if (progressContainer) document.body.removeChild(progressContainer);
+    if (exportPdfBtn) {
+      exportPdfBtn.innerHTML = originalText || '<i class="bi bi-file-earmark-pdf"></i> Export';
+      exportPdfBtn.disabled = false;
+    }
+    if (progressContainer && progressContainer.parentNode) {
+      progressContainer.parentNode.removeChild(progressContainer);
+    }
+    if (tempElement && tempElement.parentNode) {
+      tempElement.parentNode.removeChild(tempElement);
+    }
   }
 }

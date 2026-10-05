@@ -12,9 +12,11 @@ import { initMermaid } from "./markdown.js";
 
 const markdownPreview = document.getElementById('markdown-preview');
 let markdownRenderTimeout = null;
-const RENDER_DELAY = 150;
+const RENDER_DELAY = 300;
+let currentRenderSeq = 0;
 
 export function renderMarkdown() {
+  const seq = ++currentRenderSeq;
   try {
     const markdown = markdownEditor.value;
     const html = marked.parse(markdown);
@@ -41,10 +43,12 @@ export function renderMarkdown() {
           nodes: Array.from(mermaidNodes),
           suppressErrors: true
         })
-          .then(() => addMermaidToolbars())
+          .then(() => {
+            if (seq === currentRenderSeq) addMermaidToolbars();
+          })
           .catch((e) => {
             console.warn("Mermaid rendering failed:", e);
-            addMermaidToolbars();
+            if (seq === currentRenderSeq) addMermaidToolbars();
           });
       }
     } catch (e) {
@@ -59,7 +63,7 @@ export function renderMarkdown() {
           });
         } else if (MathJax.startup && MathJax.startup.promise) {
           MathJax.startup.promise.then(() => {
-            if (typeof MathJax.typesetPromise === 'function') {
+            if (seq === currentRenderSeq && typeof MathJax.typesetPromise === 'function') {
               MathJax.typesetPromise([markdownPreview]).catch((err) => {
                 console.warn("MathJax typesetting failed:", err);
               });
@@ -85,10 +89,13 @@ export function renderMarkdown() {
     updateTOC();
   } catch (e) {
     console.error("Markdown rendering failed:", e);
+    const escapeHtml = (str) => String(str || '').replace(/[&<>"']/g, (m) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
     markdownPreview.innerHTML = `<div class="alert alert-danger">
-              <strong>Error rendering markdown:</strong> ${e.message}
+              <strong>Error rendering markdown:</strong> ${escapeHtml(e.message)}
           </div>
-          <pre>${markdownEditor.value}</pre>`;
+          <pre>${escapeHtml(markdownEditor.value)}</pre>`;
   }
 }
 

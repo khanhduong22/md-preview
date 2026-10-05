@@ -39,7 +39,11 @@ function decodeMarkdownFromShare(encoded) {
   }
   const binary = atob(base64);
   const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-  return new TextDecoder().decode(pako.inflate(bytes));
+  const decompressed = pako.inflate(bytes);
+  if (decompressed.byteLength > 5 * 1024 * 1024) {
+    throw new Error("Decompressed payload exceeds maximum size limit (5MB).");
+  }
+  return new TextDecoder().decode(decompressed);
 }
 
 function copyShareUrl(btn) {

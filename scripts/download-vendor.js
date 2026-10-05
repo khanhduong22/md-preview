@@ -17,6 +17,7 @@ const filesToDownload = [
   { url: 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff', dest: 'fonts/bootstrap-icons.woff' },
 
   // JS
+  { url: 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js', dest: 'bootstrap.bundle.min.js' },
   { url: 'https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.min.js', dest: 'plantuml-encoder.min.js' },
   { url: 'https://viewer.diagrams.net/js/viewer-static.min.js', dest: 'viewer-static.min.js' },
   { url: 'https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js', dest: 'marked.min.js' },
@@ -25,7 +26,7 @@ const filesToDownload = [
   { url: 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js', dest: 'purify.min.js' },
   { url: 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js', dest: 'FileSaver.min.js' },
   { url: 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js', dest: 'html2pdf.bundle.min.js' },
-  { url: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js', dest: 'tex-mml-chtml.min.js' },
+  { url: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js', dest: 'tex-svg.min.js' },
   { url: 'https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.min.js', dest: 'mermaid.min.js' },
   { url: 'https://cdn.jsdelivr.net/npm/emoji-toolkit@9.0.1/lib/js/joypixels.min.js', dest: 'joypixels.min.js' },
   { url: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', dest: 'jspdf.umd.min.js' },

@@ -6,6 +6,9 @@ import { renderMarkdown } from './render.js';
 import { syncEditorToPreview, currentViewMode, restoreViewMode } from '../utils/viewMode.js';
 import { sampleMarkdown } from '../utils/sample.js';
 import { demo30ChartsMarkdown } from '../utils/demo-charts.js';
+import { purgeTabHistory } from './history.js';
+import { cancelEditorPendingSave } from './editor.js';
+import { cancelVaultAutoSave } from './autosave.js';
 
   export async function loadTabsFromStorage() {
     try {
@@ -165,8 +168,11 @@ import { demo30ChartsMarkdown } from '../utils/demo-charts.js';
     return GROUP_COLORS.find(c => c.name === colorName) || GROUP_COLORS[0];
   }
 
-  // Load groups on init
-  AppState.tabGroups = loadGroups();
+  // Initialize tabGroups as an empty array and hydrate asynchronously
+  AppState.tabGroups = [];
+  loadGroups().then(groups => {
+    if (Array.isArray(groups)) AppState.tabGroups = groups;
+  }).catch(() => {});
 
   export function createTab(content, title, viewMode) {
     if (content === undefined) content = '';
@@ -609,6 +615,8 @@ import { demo30ChartsMarkdown } from '../utils/demo-charts.js';
     });
   });
 
+  let currentTabSwitchGeneration = 0;
+
   export async function saveCurrentTabState(forceVaultSave = false) {
     const tab = AppState.tabs.find(function(t) { return t.id === AppState.activeTabId; });
     if (!tab) return;
@@ -634,7 +642,8 @@ import { demo30ChartsMarkdown } from '../utils/demo-charts.js';
           }
         }
       } catch(e) {
-        console.error('Failed to write cleanly to vault:', e);
+        console.error('Failed to write cleanly to vault, falling back to local storage:', e);
+        saveTabsToStorage(AppState.tabs);
       }
     } else if (!tab.handle) {
       saveTabsToStorage(AppState.tabs);
@@ -643,26 +652,43 @@ import { demo30ChartsMarkdown } from '../utils/demo-charts.js';
 
   export async function switchTab(tabId) {
     if (tabId === AppState.activeTabId && !AppState.localVaultMode) return;
+
+    // 1. Clear any pending debounced editor save or vault auto-save to avoid stale writes
+    cancelEditorPendingSave();
+    cancelVaultAutoSave();
+
+    // 2. Persist outgoing tab before switching activeTabId pointer
     await saveCurrentTabState(true);
-    AppState.activeTabId = tabId;
-    saveActiveTabId(AppState.activeTabId);
-    const tab = AppState.tabs.find(function(t) { return t.id === tabId; });
-    if (!tab) return;
+
+    const switchGen = ++currentTabSwitchGeneration;
+    const targetTab = AppState.tabs.find(function(t) { return t.id === tabId; });
+    if (!targetTab) return;
     
-    if (tab.handle) {
+    let contentToLoad = targetTab.content || '';
+    if (targetTab.handle) {
       try {
-        const file = await tab.handle.getFile();
-        tab.content = await file.text();
+        const file = await targetTab.handle.getFile();
+        contentToLoad = await file.text();
+        targetTab.content = contentToLoad;
       } catch(e) {
-        if (!tab.content) tab.content = 'Error reading file';
+        if (!targetTab.content) {
+          targetTab.content = 'Error reading file';
+          contentToLoad = targetTab.content;
+        }
       }
     }
     
-    markdownEditor.value = tab.content || '';
-    restoreViewMode(tab.viewMode);
+    // If another tab switch occurred during async file reading, discard this stale switch
+    if (switchGen !== currentTabSwitchGeneration) return;
+
+    // 3. Atomically align activeTabId and editor value
+    AppState.activeTabId = tabId;
+    saveActiveTabId(AppState.activeTabId);
+    markdownEditor.value = contentToLoad;
+    restoreViewMode(targetTab.viewMode);
     renderMarkdown();
     requestAnimationFrame(function() {
-      markdownEditor.scrollTop = tab.scrollPos || 0;
+      markdownEditor.scrollTop = targetTab.scrollPos || 0;
     });
     renderTabBar(AppState.tabs, AppState.activeTabId);
   }
@@ -677,8 +703,13 @@ import { demo30ChartsMarkdown } from '../utils/demo-charts.js';
     markdownEditor.focus();
   }
   export function closeTab(tabId) {
+    if (AppState.activeTabId === tabId) {
+      cancelEditorPendingSave();
+      cancelVaultAutoSave();
+    }
     const idx = AppState.tabs.findIndex(function(t) { return t.id === tabId; });
     if (idx === -1) return;
+    purgeTabHistory(tabId);
     AppState.tabs.splice(idx, 1);
     if (AppState.tabs.length === 0) {
       // Auto-create new "Untitled" when last tab is deleted

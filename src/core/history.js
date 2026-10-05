@@ -38,11 +38,35 @@ import { markdownEditor } from './dom.js';
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
 
-  /** Called when user shares — saves a snapshot */
+  export function purgeTabHistory(tabId) {
+    if (!tabId) return;
+    const history = loadHistory();
+    const filtered = history.filter(s => s.tabId !== tabId);
+    if (filtered.length !== history.length) {
+      saveHistory(filtered);
+    }
+  }
+
+  /** Called when user shares or on significant pause — saves a snapshot */
   export function saveShareSnapshot(content, title) {
+    if (!content && content !== '') return null;
     const history = loadHistory();
     const tabSnapshots = history.filter(s => s.tabId === AppState.activeTabId);
     const lastSnapshot = tabSnapshots.length > 0 ? tabSnapshots[tabSnapshots.length - 1] : null;
+
+    // Deduplicate: do not save if content is identical to last snapshot
+    if (lastSnapshot && lastSnapshot.content === content) {
+      return lastSnapshot;
+    }
+
+    // Limit snapshots for this tab to 15
+    if (tabSnapshots.length >= 15) {
+      const oldestIdx = history.findIndex(s => s.tabId === AppState.activeTabId);
+      if (oldestIdx !== -1) {
+        history.splice(oldestIdx, 1);
+      }
+    }
+
     const snapshot = {
       id: generateId(),
       tabId: AppState.activeTabId,
@@ -52,8 +76,8 @@ import { markdownEditor } from './dom.js';
       parentId: lastSnapshot ? lastSnapshot.id : null
     };
     history.push(snapshot);
-    // Keep max 200 snapshots total
-    if (history.length > 200) history.splice(0, history.length - 200);
+    // Keep max 50 snapshots globally
+    if (history.length > 50) history.splice(0, history.length - 50);
     saveHistory(history);
     return snapshot;
   }

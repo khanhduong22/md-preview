@@ -38,19 +38,21 @@
     <link rel="stylesheet" href="/vendor/joypixels.min.css">
     <link rel="stylesheet" href="/vendor/driver.css"/>
     
+    <!-- MathJax Configuration & SVG Vector Engine (loaded before Draw.io to prevent external math script injection) -->
+    <script src="/vendor/mathjax-config.js"></script>
+    <script src="/vendor/tex-svg.min.js"></script>
+
     <!-- PlantUML & Draw.io dependencies -->
     <script src="/vendor/plantuml-encoder.min.js"></script>
     <script type="text/javascript" src="/vendor/viewer-static.min.js"></script>
     
-    <!-- Loading order optimized - ensure libraries are loaded before they're used -->
+    <!-- Core Markdown & Diagram libraries -->
     <script src="/vendor/marked.min.js"></script>
     <script src="/vendor/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/gherkin.min.js" onerror="this.onerror=null;this.src='/vendor/gherkin.min.js';"></script>
+    <script src="/vendor/gherkin.min.js"></script>
     <script src="/vendor/purify.min.js"></script>
     <script src="/vendor/FileSaver.min.js"></script>
     <script src="/vendor/html2pdf.bundle.min.js"></script>
-    <script src="/vendor/mathjax-config.js"></script>
-    <script src="/vendor/tex-svg.min.js"></script>
     <script src="/vendor/mermaid.min.js"></script>
     <script src="/vendor/joypixels.min.js"></script>
     <script src="/vendor/jspdf.umd.min.js"></script>
@@ -497,7 +499,7 @@
     </div>
     <div id="history-overlay" class="history-overlay" style="display:none;"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/bootstrap.bundle.min.js"></script>
     <script type="module" src="/src/main.js"></script>
 </body>
 </html>

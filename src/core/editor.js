@@ -6,10 +6,26 @@ import { AppState } from "./state.js";
 import { queueVaultAutoSave } from "./autosave.js";
 import { generateSmartTitle, isUntitledTab } from "../utils/autoname.js";
 
+let autoSnapshotTimer = null;
+let saveTabStateTimeout = null;
+let autoNamingTimeout = null;
+
+export function cancelEditorPendingSave() {
+  if (saveTabStateTimeout) {
+    clearTimeout(saveTabStateTimeout);
+    saveTabStateTimeout = null;
+  }
+  if (autoNamingTimeout) {
+    clearTimeout(autoNamingTimeout);
+    autoNamingTimeout = null;
+  }
+  if (autoSnapshotTimer) {
+    clearTimeout(autoSnapshotTimer);
+    autoSnapshotTimer = null;
+  }
+}
+
 export function initEditor() {
-  let autoSnapshotTimer = null;
-  let saveTabStateTimeout = null;
-  let autoNamingTimeout = null;
 
   async function checkAndApplyAutoNaming(content) {
     const currentTab = AppState.tabs.find((t) => t.id === AppState.activeTabId);

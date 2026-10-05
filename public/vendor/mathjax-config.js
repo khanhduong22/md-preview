@@ -1,12 +1,18 @@
-// MathJax Configuration for 2ndBrain Chrome Extension
+// MathJax Configuration for 2ndBrain
 window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+  },
   options: {
-    enableMenu: false // Disable the context menu to prevent dynamic component loading
+    renderActions: {
+      addMenu: [] // Disable context menu cleanly in MathJax 3
+    }
   },
   loader: {
     load: [] // Disable dynamic loading of external components (offline-first)
   },
   startup: {
-    typeset: false // We trigger typesetting manually using typesetPromise
+    typeset: false
   }
 };

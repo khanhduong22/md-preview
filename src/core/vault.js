@@ -1,7 +1,8 @@
 import { VAULT_HANDLE_KEY } from "./constants.js";
 import { AppState } from './state.js';
-import { renderTabBar, saveCurrentTabState, createTab, createGroup, switchTab, deleteTab, closeTab, GROUP_COLORS } from './tabs.js';
+import { renderTabBar, saveCurrentTabState, createTab, createGroup, switchTab, deleteTab, closeTab, GROUP_COLORS, saveGroups } from './tabs.js';
 import { markdownEditor } from './dom.js';
+import { renderMarkdown } from './render.js';
 
   export async function doVaultRename(entry, newName, fallbackCb) {
     try {
@@ -23,12 +24,26 @@ import { markdownEditor } from './dom.js';
          }
          await copyDir(entry.handle, destDirHandle);
          await entry.parentDir.removeEntry(entry.name, { recursive: true });
+
+         // Update open tabs inside the renamed directory
+         const oldPrefix = entry.path + '/';
+         const parentDirPath = entry.path.substring(0, entry.path.lastIndexOf('/'));
+         const newPrefix = (parentDirPath ? parentDirPath + '/' : '') + newName + '/';
+         AppState.tabs.forEach(t => {
+           if (t.path && t.path.startsWith(oldPrefix)) {
+             t.path = newPrefix + t.path.slice(oldPrefix.length);
+             t.id = t.path;
+           }
+         });
+         if (AppState.activeTabId && AppState.activeTabId.startsWith(oldPrefix)) {
+           AppState.activeTabId = newPrefix + AppState.activeTabId.slice(oldPrefix.length);
+         }
          
          let group = AppState.tabGroups.find(g => g.name === entry.name);
          if (group) { 
            group.name = newName; 
            renderTabBar(AppState.tabs, AppState.activeTabId); 
-           if(typeof saveTabGroups === 'function') saveTabGroups(); 
+           saveGroups(); 
          }
       } else {
          if (!newName.endsWith('.md')) newName += '.md';
@@ -125,7 +140,6 @@ import { markdownEditor } from './dom.js';
               const file = await activeTab.handle.getFile();
               activeTab.content = await file.text();
               markdownEditor.value = activeTab.content || '';
-              const { renderMarkdown } = await import('./render.js');
               renderMarkdown();
             } catch (err) {
               console.warn("Failed to reload active tab after re-authorization", err);
@@ -269,6 +283,7 @@ import { markdownEditor } from './dom.js';
   export async function renderVaultTree() {
     const treeEl = document.getElementById('file-tree');
     treeEl.innerHTML = '';
+    AppState.vaultEntries = [];
     
     // Prepare MiniSearch
     if (window.MiniSearch) {
@@ -282,7 +297,9 @@ import { markdownEditor } from './dom.js';
       let entries = [];
       for await (const [name, handle] of dirHandle.entries()) {
         if (name.startsWith('.')) continue;
-        entries.push({ name, handle, path: path + '/' + name, parentDir: dirHandle });
+        const entryObj = { name, handle, path: path + '/' + name, parentDir: dirHandle };
+        entries.push(entryObj);
+        AppState.vaultEntries.push(entryObj);
       }
       entries.sort((a, b) => {
         if (a.handle.kind === b.handle.kind) return a.name.localeCompare(b.name);
@@ -402,7 +419,7 @@ import { markdownEditor } from './dom.js';
 
         if (entry.handle.kind === 'file' && entry.name.endsWith('.md')) {
           entry.handle.getFile().then(f => f.text()).then(text => {
-            if (AppState.vaultMiniSearch) {
+            if (AppState.vaultMiniSearch && !AppState.vaultMiniSearch.has(entry.path)) {
                AppState.vaultMiniSearch.add({ id: entry.path, title: entry.name, path: entry.path, content: text });
             }
           });

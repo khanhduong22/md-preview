@@ -51,8 +51,10 @@ export async function downloadMermaidPng(container, btn) {
       const a = document.createElement('a');
       a.href = url;
       a.download = `diagram-${Date.now()}.png`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
       btn.innerHTML = '<i class="bi bi-check-lg"></i>';
       setTimeout(() => { btn.innerHTML = original; }, 1500);
     }, 'image/png');
@@ -97,8 +99,10 @@ export function downloadMermaidSvg(container, btn) {
   const a = document.createElement('a');
   a.href = url;
   a.download = `diagram-${Date.now()}.svg`;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
   const original = btn.innerHTML;
   btn.innerHTML = '<i class="bi bi-check-lg"></i>';
   setTimeout(() => { btn.innerHTML = original; }, 1500);

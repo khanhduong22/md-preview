@@ -10,8 +10,7 @@ This file outlines build commands, test instructions, project architecture, and 
 
 ## Test & Verification Commands
 
-* **Visual Regression Tests**: `npm run test:visual` (runs Playwright visual tests)
-* **Mermaid Verification Script**: `node scripts/temp/verify.js` (launches a browser to verify Mermaid SVG rendering)
+* **Visual & Integration Tests**: `npm run test:visual` (runs Playwright test suite)
 
 ## Project Architecture & Structure
 

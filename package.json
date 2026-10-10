@@ -1,7 +1,7 @@
 {
   "name": "md-preview",
   "version": "1.0.0",
-  "description": "<div align=\"center\">     <img src=\"assets/icon.jpg\" alt=\"Markdown Viewer Logo\" width=\"150px\"/>     <h3>A powerful GitHub-style Markdown rendering tool</h3>     <p>Fast, secure, and feature-rich - all running in your browser</p>     <a href=\"https://markdownviewer.pages.dev/\">Live Demo</a> •      <a href=\"#-features\">Features</a> •      <a href=\"#-screenshots\">Screenshots</a> •      <a href=\"#-usage\">Usage</a> •      <a href=\"#-license\">License</a> </div>",
+  "description": "Personal Markdown note assistant - client-side, no backend",
   "main": "index.html",
   "type": "module",
   "scripts": {
@@ -14,13 +14,24 @@
     "type": "git",
     "url": "git+https://github.com/khanhduong22/md-preview.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "markdown",
+    "editor",
+    "preview",
+    "client-side",
+    "mermaid",
+    "plantuml",
+    "mathjax",
+    "latex",
+    "tabs",
+    "vault"
+  ],
+  "author": "KhanhDP <phuckhanh22@gmail.com>",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/khanhduong22/md-preview/issues"
   },
-  "homepage": "https://github.com/khanhduong22/md-preview#readme",
+  "homepage": "https://md.khanhdp.com",
   "devDependencies": {
     "@playwright/test": "^1.59.1",
     "vite": "^8.0.10"

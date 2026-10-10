@@ -1,135 +1,206 @@
-# Markdown Viewer
+# 2ndBrain (MD Preview) 🧠
 
 <div align="center">
-    <img src="assets/icon.jpg" alt="Markdown Viewer Logo" width="150px"/>
-    <h3>A powerful GitHub-style Markdown rendering tool</h3>
-    <p>Fast, secure, and feature-rich - all running in your browser</p>
-    <a href="https://md.khanhdp.com">Live Demo</a> • 
-    <a href="#-features">Features</a> • 
-    <a href="#-screenshots">Screenshots</a> • 
-    <a href="#-usage">Usage</a> • 
+  <img src="assets/icon.jpg" alt="2ndBrain Logo" width="120px" style="border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);"/>
+  <h2 align="center">Next-Generation Client-Side Markdown Editor & Personal Assistant</h2>
+  <p align="center">
+    <strong>Fast, private, and feature-rich — running 100% in your browser with zero backend.</strong>
+  </p>
+
+  <p align="center">
+    <a href="https://md.khanhdp.com"><img src="https://img.shields.io/badge/Live_Demo-md.khanhdp.com-6366f1?style=for-the-badge&logo=vercel" alt="Live Demo"/></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License"/></a>
+    <img src="https://img.shields.io/badge/Privacy-100%25_Client--Side-10b981?style=for-the-badge&logo=shield" alt="Privacy"/>
+    <img src="https://img.shields.io/badge/Vite-8.0-646cff?style=for-the-badge&logo=vite" alt="Vite"/>
+  </p>
+
+  <p align="center">
+    <a href="#-overview">Overview</a> •
+    <a href="#-key-features">Key Features</a> •
+    <a href="#-diagrams--math">Diagrams & Math</a> •
+    <a href="#-screenshots">Screenshots</a> •
+    <a href="#-keyboard-shortcuts">Shortcuts</a> •
+    <a href="#-getting-started">Getting Started</a> •
     <a href="#-license">License</a>
+  </p>
 </div>
+
+---
 
 ## 🚀 Overview
 
-Markdown Viewer is a professional, full-featured Markdown editor and preview application that runs entirely in your browser. It provides a GitHub-style rendering experience with a clean split-screen interface, allowing you to write Markdown on one side and instantly preview the formatted output on the other.
+**2ndBrain** (MD Preview) is a modern, privacy-first Markdown workspace engineered for developers, researchers, and technical writers. It brings GitHub-flavored Markdown rendering, multi-tab file management, Chrome-style tab grouping, local directory vault sync, and comprehensive diagramming tools into a clean, glassmorphism-styled interface.
 
-## ✨ Features
+- 🔒 **Zero-Knowledge Privacy**: 100% client-side execution. All notes, histories, and settings remain on your local machine using browser `IndexedDB` (via `localforage`) and `localStorage`. No accounts, no database, no third-party tracking.
+- ⚡ **Blazing Fast**: Powered by Vite and vanilla ES modules with instant live preview.
+- 🌐 **Online or Offline**: Installable as a PWA, usable as a Chrome Extension with Side Panel support, or downloadable as a standalone self-contained `.html` file.
 
-- **GitHub-style Markdown rendering** - See your Markdown exactly as it would appear on GitHub
-- **Live preview** - Instantly see changes as you type
-- **Syntax highlighting** - Beautiful code highlighting for multiple programming languages
-- **LaTeX math support** - Render mathematical equations using LaTeX syntax
-- **Mermaid diagrams** - Create diagrams and flowcharts within your Markdown; hover over any diagram to reveal a toolbar for zooming, downloading (PNG/SVG), and copying to clipboard
-- **Dark mode toggle** - Switch between light and dark themes for comfortable viewing
-- **Export options** - Download your content as Markdown, HTML, or PDF
-- **Import Markdown files** - Drag & drop or select files to open
-- **Copy to clipboard** - Quickly copy your Markdown content with one click
-- **Sync scrolling** - Keep editor and preview panes aligned (toggleable)
-- **Content statistics** - Track word count, character count, and reading time
-- **Fully responsive** - Works on desktop and mobile devices
-- **Emoji support** - Convert emoji shortcodes into actual emojis
-- **100% client-side** - No server processing, ensuring complete privacy and security
-- **No sign-up required** - Use instantly without any registration
+---
+
+## ✨ Key Features
+
+### 📑 Multi-Tab Workspace
+- **Dynamic Tabs**: Create unlimited notes with drag-and-drop tab reordering.
+- **Smart Auto-Naming**: Automatically detects and renames untitled notes from the first H1, H2, frontmatter title, or first sentence.
+- **Inline Renaming**: Double-click any tab title or use the context menu to rename immediately.
+- **Tab Pinning & Tags**: Pin critical notes to the front with visual indicators, or assign customizable tags to filter notes with one click.
+
+### 🎨 Chrome-Style Tab Groups
+- Organize workspaces into color-coded groups (8 vibrant colors: gray, blue, purple, green, yellow, orange, red, pink).
+- **Collapsible**: Click group headers to collapse or expand related documents.
+- **Interactive**: Drag tabs directly into groups, rename groups inline, and duplicate tabs with preserved group hierarchy.
+
+### 📂 Local Directory Vault Sync
+- Connect a local directory directly through the browser using the **Native File System Access API**.
+- Browse folders and files via the integrated Explorer sidebar.
+- Seamlessly synchronize virtual browser tabs directly into your local directory.
+
+### 👁️ Responsive Split-Screen & Focus Mode
+- Toggle between **Editor**, **Split**, and **Preview** modes effortlessly.
+- **Synchronized Scrolling**: Smooth two-way scroll lock between editor and rendered output.
+- **Hide / Focus Mode**: Collapse headers and chrome at the touch of a button (`Escape` or toggle button) for a completely distraction-free writing environment.
+
+### 🔍 Instant Full-Text Search (`Cmd/Ctrl + K`)
+- High-performance full-text search indexing across all active and cached notes powered by `minisearch`.
+- Instant search modal with keyboard navigation (`↑`/`↓`/`Enter`), keyword highlighting, and direct jump-to-anchor with pulse highlighting in preview.
+
+### 🕒 Version History & Visual Diff
+- Slide-in version history sidebar with adjustable width.
+- **Auto-Snapshots**: Automatic incremental snapshots saved every few seconds when content changes, and whenever sharing notes.
+- **Visual Diff Viewer**: Interactive unified diff view powered by `diff` to track additions, deletions, and revisions over time.
+
+### 🎨 Curated Document Themes
+Switch document aesthetics on the fly:
+- **Classic & Reading**: Default (GitHub), Academic (Serif), Typewriter, Newspaper, Manuscript.
+- **Modern & Technical**: Business (Corporate), Minimal, Hacker (Terminal).
+- **Vibrant**: Ocean, Sunset, Rainbow.
+- **System Theme**: Seamless toggle between Dark and Light glassmorphism themes.
+
+### 💾 Export & Sharing
+- **Multi-Format Export**: Save as raw Markdown (`.md`), styled HTML, or paginated PDF.
+- **Download Single File (.html)**: Package the entire web application and your document into a single self-contained offline HTML file.
+- **Backup & Restore**: Export your complete workspace state as a single JSON file and restore anytime.
+- **Zero-Backend URL Sharing**: Share notes instantly via compressed, URL-safe hash URLs with custom read-only and focus mode parameters.
+
+---
+
+## 📊 Diagrams & Math
+
+2ndBrain supports rich visual documentation directly within standard Markdown code blocks:
+
+### 1. Mermaid.js
+Render flowcharts, sequence diagrams, class diagrams, state diagrams, Gantt charts, and Git graphs:
+
+```mermaid
+flowchart LR
+    A[Markdown Source] --> B(Live Parser)
+    B --> C{Render Engine}
+    C -->|Diagrams| D[Mermaid / PlantUML / Draw.io]
+    C -->|Math| E[MathJax LaTeX]
+    C -->|Output| F[GitHub-Style HTML Preview]
+```
+
+> **Interactive Diagram Toolbar**: Hover over any Mermaid diagram to reveal controls:
+> - ⛶ **Pan & Zoom Modal**: Interactive drag-to-pan, mouse-wheel zoom, and reset.
+> - 📷 **PNG / SVG Download**: One-click high-resolution export.
+> - 📋 **Copy to Clipboard**: Instant image copy to paste directly into Slack, Notion, or Docs.
+
+### 2. PlantUML & Draw.io
+- **PlantUML**: Automatically encoded and rendered via client-side SVG transformation.
+- **Draw.io**: Seamlessly preview XML-based Draw.io diagrams natively in the preview pane.
+
+### 3. LaTeX Math via MathJax
+Write inline formulas with `$...$` or complex display blocks with `$$...$$`:
+
+$$\frac{\partial f}{\partial x} = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}$$
+
+$$\sum_{i=1}^{n} i^2 = \frac{n(n+1)(2n+1)}{6}$$
+
+---
 
 ## 📸 Screenshots
 
-### Code Syntax Highlighting
-![Code Syntax Highlighting](assets/code.png)
+| Code Syntax Highlighting | Mathematical Expressions |
+| :---: | :---: |
+| ![Code Highlighting](assets/code.png) | ![Math Expressions](assets/mathexp.png) |
 
-### Mathematical Expressions Support
-![Mathematical Expressions](assets/mathexp.png)
+| Mermaid Diagrams | Tables & Layouts |
+| :---: | :---: |
+| ![Mermaid Diagrams](assets/mermaid.png) | ![Tables Support](assets/table.png) |
 
-### Mermaid Diagrams
-![Mermaid Diagrams](assets/mermaid.png)
+---
 
-### Tables Support
-![Tables Support](assets/table.png)
+## ⌨️ Keyboard Shortcuts
 
-## 📝 Usage
+| Shortcut | Action |
+| --- | --- |
+| <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>K</kbd> | Open Full-Text Search Modal |
+| <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>B</kbd> | Bold selected text |
+| <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>I</kbd> | Italicize selected text |
+| <kbd>Cmd</kbd> / <kbd>Ctrl</kbd> + <kbd>S</kbd> | Quick Save / Export Markdown |
+| <kbd>Escape</kbd> | Close search / history / diagram modal or exit Focus Mode |
 
-1. **Writing Markdown** - Type or paste Markdown content in the left editor panel
-2. **Viewing Output** - See the rendered HTML in the right preview panel
-3. **Importing Files** - Click "Import" or drag and drop .md files into the interface
-4. **Exporting Content** - Use the "Export" dropdown to download as MD, HTML, or PDF
-5. **Toggle Dark Mode** - Click the moon icon to switch between light and dark themes
-6. **Toggle Sync Scrolling** - Enable/disable synchronized scrolling between panels
+---
 
-### Mermaid Diagram Toolbar
+## 🧩 Chrome Extension (Manifest V3)
 
-When a Mermaid diagram is rendered, hover over it to reveal a small toolbar with the following actions:
+2ndBrain can be loaded as an unpacked Chrome Extension with Side Panel support:
 
-| Button | Action |
-|--------|--------|
-| ⛶ (arrows) | Open diagram in a zoom/pan modal |
-| PNG | Download the diagram as a PNG image |
-| 📋 (clipboard) | Copy the diagram image to the clipboard |
-| SVG | Download the diagram as an SVG file |
+1. Build the production bundle:
+   ```bash
+   npm run build
+   ```
+2. Open Google Chrome and navigate to `chrome://extensions/`.
+3. Enable **Developer mode** (top right switch).
+4. Click **Load unpacked** and select the [`dist/`](dist/) directory.
+5. Click the extension icon to launch 2ndBrain in the Chrome Side Panel.
 
-Inside the **zoom modal** you can:
-- **Zoom in / out** using the buttons or the mouse wheel
-- **Pan** by clicking and dragging the diagram
-- **Reset** zoom and position with the Reset button
-- **Download PNG or SVG** directly from the modal
-- **Close** with the × button or by pressing `Escape`
+---
 
-### Supported Markdown Features
+## 🛠️ Getting Started
 
-- Headings (# H1, ## H2, etc.)
-- **Bold** and *italic* text
-- ~~Strikethrough~~
-- [Links](https://example.com)
-- Images
-- Lists (ordered and unordered)
-- Tables
-- Code blocks with syntax highlighting
-- Blockquotes
-- Horizontal rules
-- Task lists
-- LaTeX equations (inline and block)
-- Mermaid diagrams
-- And more!
+### Prerequisites
+- Node.js (v18 or higher recommended)
+- npm or pnpm
 
-## 🔧 Technologies Used
+### Installation & Setup
 
-- HTML5
-- CSS3
-- JavaScript
-- [Bootstrap](https://getbootstrap.com/) - Responsive UI framework
-- [Marked.js](https://marked.js.org/) - Markdown parser
-- [highlight.js](https://highlightjs.org/) - Syntax highlighting
-- [MathJax](https://www.mathjax.org/) - Mathematical expressions
-- [Mermaid](https://mermaid-js.github.io/mermaid/) - Diagrams and flowcharts
-- [DOMPurify](https://github.com/cure53/DOMPurify) - HTML sanitization
-- [html2canvas.js](https://github.com/niklasvh/html2canvas) + [jsPDF](https://www.npmjs.com/package/jspdf)- PDF generation
-- [FileSaver.js](https://github.com/eligrey/FileSaver.js) - File download handling
-- [JoyPixels](https://www.joypixels.com/) - Emoji support
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/khanhduong22/md-preview.git
+   cd md-preview
+   ```
 
-## 🤝 Contributing
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+3. **Start local development server:**
+   ```bash
+   npm run dev
+   ```
+   Open your browser at `http://localhost:5173`.
 
-1. Fork the project
-2. Create your feature branch (`git checkout -b amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin amazing-feature`)
-5. Open a Pull Request
+4. **Build production assets:**
+   ```bash
+   npm run build
+   ```
+
+5. **Run Playwright test suite:**
+   ```bash
+   npx playwright test
+   ```
+
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 📈 Development Journey
-
-The Markdown Viewer has undergone significant evolution. What started as a simple markdown parser has grown into a full-featured, professional application with advanced capabilities:
-- **Robust Client-Side PDF Export**: Built-in, high-fidelity PDF renderer that computes precise pagination boundaries, automatically injects custom layout stylesheets, and handles complex HTML elements (tables, code blocks, lists) directly in the client without external backend servers.
-- **Interactive Onboarding Tour**: Full guided walkthrough system built to guide new users through advanced capabilities like live syncing and Mermaid diagram tools.
-
-By comparing the [current version](https://md.khanhdp.com) with the [original version](https://a1b91221.markdownviewer.pages.dev/), you can see the remarkable progress in UI design, performance optimization, and feature implementation.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ---
 
 <div align="center">
-    <p>Developed with ❤️ by <a href="https://github.com/ThisIs-Developer">ThisIs-Developer</a></p>
+  <p>Crafted with ❤️ by <a href="https://github.com/khanhduong22">KhanhDP</a></p>
+  <p><a href="https://md.khanhdp.com">md.khanhdp.com</a></p>
 </div>

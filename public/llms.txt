@@ -5,12 +5,13 @@
 ## Overview
 2ndBrain is a privacy-first, client-side markdown workspace that runs entirely in the user's browser. All data remains local with no backend storage.
 
+## Key Resources
+- [Markdown Viewer Application](https://md.khanhdp.com/): Interactive markdown editor, previewer, and note workspace
+- [Source Code Repository](https://github.com/khanhduong22/md-preview): Open-source repository, issues, and documentation
+
 ## Features
 - **Live GitHub Preview**: Real-time rendering with GitHub markdown styling
 - **Diagrams & Math**: Integrated Mermaid diagrams and LaTeX mathematics
 - **Local Vault Storage**: Private, persistent local storage with tab management
 - **Zero-Friction Sharing**: Client-side stateless URL sharing with optional view modes
 - **Export Options**: Standalone HTML, Markdown, and formatted PDF export
-
-## URL
-- https://md.khanhdp.com/

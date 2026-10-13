@@ -16,6 +16,7 @@ test.describe('Visual Regression Testing', () => {
 
     // 2. Chờ một tí cho các hiệu ứng, font chữ tải xong hoàn toàn
     await page.waitForLoadState('networkidle');
+    await page.evaluate(() => document.fonts.ready);
     await page.waitForTimeout(500);
 
     // 3. Chụp màn hình và so sánh! (Lần đầu chạy nó sẽ tự tạo file mẫu)
@@ -35,6 +36,7 @@ test.describe('Visual Regression Testing', () => {
   test('trang chủ lúc bật Dark Mode', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    await page.evaluate(() => document.fonts.ready);
 
     // Tắt banner bằng JS thuần
     await page.evaluate(() => {

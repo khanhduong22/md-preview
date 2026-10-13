@@ -33,16 +33,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=optional" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=optional"></noscript>
-    <link rel="preload" href="/vendor/fonts/bootstrap-icons.woff2?dd67030699838ea613ee6dbda90effa6" as="font" type="font/woff2" crossorigin>
     <link rel="preload" as="style" href="/vendor/github-markdown.min.css" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="/vendor/github-markdown.min.css"></noscript>
     <link rel="preload" as="style" href="/vendor/bootstrap-icons.min.css" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="/vendor/bootstrap-icons.min.css"></noscript>
-    
-    <!-- Core Essential Libraries (Deferred - Non-Blocking) -->
-    <script defer src="/vendor/marked.min.js"></script>
-    <script defer src="/vendor/purify.min.js"></script>
-    <script defer src="/vendor/localforage.min.js"></script>
 </head>
 <body>
     <!-- Privacy Notice Banner -->
@@ -789,6 +783,10 @@ Right-aligned text (for dates, signatures, etc.)
         </div>
     </div>
     <div id="history-overlay" class="history-overlay" style="display:none;"></div>
+    <!-- Core Essential Libraries (Deferred - Non-Blocking) -->
+    <script defer src="/vendor/marked.min.js"></script>
+    <script defer src="/vendor/purify.min.js"></script>
+    <script defer src="/vendor/localforage.min.js"></script>
 
     <script type="module" src="/src/main.js"></script>
 </body>

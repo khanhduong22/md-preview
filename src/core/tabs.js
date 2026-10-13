@@ -396,6 +396,7 @@ import { cancelVaultAutoSave } from './autosave.js';
       header.style.setProperty('--group-color', gc.border);
       header.style.setProperty('--group-bg', gc.bg);
       header.setAttribute('data-group-id', group.id);
+      header.setAttribute('role', 'presentation');
 
       header.replaceChildren();
       header.insertAdjacentHTML('beforeend',
@@ -520,7 +521,11 @@ import { cancelVaultAutoSave } from './autosave.js';
     icon.className = 'bi bi-plus-lg';
     newBtn.appendChild(icon);
     newBtn.addEventListener('click', function() { newTab(); });
-    tabList.appendChild(newBtn);
+    const newBtnWrapper = document.createElement('div');
+    newBtnWrapper.setAttribute('role', 'presentation');
+    newBtnWrapper.style.display = 'inline-flex';
+    newBtnWrapper.appendChild(newBtn);
+    tabList.appendChild(newBtnWrapper);
 
     // Auto-scroll active tab into view
     const activeItem = tabList.querySelector('.tab-item.active');

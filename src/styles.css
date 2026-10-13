@@ -133,9 +133,13 @@ body {
 .empty-vault-message {
   padding: 20px;
   text-align: center;
-  color: var(--scrollbar-thumb);
+  color: #57606a;
   font-size: 0.9rem;
   line-height: 1.5;
+}
+
+[data-theme="dark"] .empty-vault-message {
+  color: #94a3b8;
 }
 
 .tree-node {
@@ -573,7 +577,7 @@ a:focus {
   --color-prettylights-syntax-entity: #6f42c1;
   --color-prettylights-syntax-storage-modifier-import: #24292e;
   --color-prettylights-syntax-entity-tag: #22863a;
-  --color-prettylights-syntax-keyword: #d73a49;
+  --color-prettylights-syntax-keyword: #cf222e;
   --color-prettylights-syntax-string: #032f62;
   --color-prettylights-syntax-variable: #e36209;
   --color-prettylights-syntax-brackethighlighter-unmatched: #b31d28;

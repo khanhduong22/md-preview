@@ -150,6 +150,8 @@ body {
   text-overflow: ellipsis;
   gap: 8px;
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 32px;
 }
 .tree-node-title {
   flex: 1;
@@ -2176,6 +2178,8 @@ a:focus {
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 48px;
 }
 
 .search-result-item:hover { background: var(--button-hover); }
@@ -2285,6 +2289,8 @@ a:focus {
   margin-bottom: 8px;
   cursor: pointer;
   transition: all 0.15s;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 60px;
 }
 
 .history-item:hover {

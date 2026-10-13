@@ -5,6 +5,7 @@ import { initEditor } from "./core/editor.js";
 import { initViewModeUI } from "./utils/viewMode.js";
 import { bootstrapApp } from "./core/app.js";
 import { initMarkdownParser } from "./core/markdown.js";
+import { renderMarkdown } from "./core/render.js";
 import { initTour } from "./utils/tour.js";
 import { initFocusMode } from "./utils/focusMode.js";
 import { initAutoSave } from "./core/autosave.js";
@@ -18,6 +19,7 @@ markdownEditor.value = sampleMarkdown;
 
 document.addEventListener("DOMContentLoaded", () => {
   initMarkdownParser();
+  renderMarkdown();
   initTheme();
   initPrivacyNotice();
   initEditor();

@@ -1,6 +1,7 @@
 import { HISTORY_KEY } from "./constants.js";
 import { AppState } from './state.js';
 import { markdownEditor } from './dom.js';
+import { ensureDiff } from "../utils/loader.js";
 
   // 5. VERSION HISTORY
   // ========================================
@@ -128,7 +129,8 @@ import { markdownEditor } from './dom.js';
     if (historyOverlay) historyOverlay.style.display = 'none';
   }
 
-  export function showHistoryDiff(snapId) {
+  export async function showHistoryDiff(snapId) {
+    await ensureDiff();
     const history = loadHistory();
     const snap = history.find(s => s.id === snapId);
     if (!snap) return;

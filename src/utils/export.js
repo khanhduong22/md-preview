@@ -1,6 +1,7 @@
 import { markdownEditor } from '../core/dom.js';
 import { exportToPdf } from './pdf.js';
 import { importMarkdownFile } from './import.js';
+import { ensureFileSaver } from './loader.js';
 
 export function initExportSetup() {
   const exportMd = document.getElementById("export-md");
@@ -24,13 +25,29 @@ export function initExportSetup() {
     });
   }
 
+  const triggerDownload = (blob, filename) => {
+    if (typeof saveAs !== "undefined") {
+      saveAs(blob, filename);
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  };
+
   if (exportMd) {
-    exportMd.addEventListener("click", function () {
+    exportMd.addEventListener("click", async function () {
       try {
+        await ensureFileSaver();
         const blob = new Blob([markdownEditor.value], {
           type: "text/markdown;charset=utf-8",
         });
-        saveAs(blob, "document.md");
+        triggerDownload(blob, "document.md");
       } catch (e) {
         console.error("Export failed:", e);
         alert("Export failed: " + e.message);
@@ -39,8 +56,9 @@ export function initExportSetup() {
   }
 
   if (exportHtml) {
-    exportHtml.addEventListener("click", function () {
+    exportHtml.addEventListener("click", async function () {
       try {
+        await ensureFileSaver();
         const markdown = markdownEditor.value;
         const html = marked.parse(markdown);
         const sanitizedHtml = DOMPurify.sanitize(html, {
@@ -87,7 +105,7 @@ export function initExportSetup() {
 </body>
 </html>`;
         const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
-        saveAs(blob, "document.html");
+        triggerDownload(blob, "document.html");
       } catch (e) {
         console.error("HTML export failed:", e);
         alert("HTML export failed: " + e.message);

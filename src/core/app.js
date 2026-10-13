@@ -34,6 +34,9 @@ const VAULT_HANDLE_KEY = "kido-vault-handle";
 const GROUPS_KEY = "markdownViewerGroups";
 
 async function migrateFromLocalStorage() {
+  if (localStorage.getItem("kido-storage-migrated") === "true") {
+    return;
+  }
   const keys = [
     STORAGE_KEY,
     ACTIVE_TAB_KEY,
@@ -42,28 +45,55 @@ async function migrateFromLocalStorage() {
     "kido-md-history",
     "kido-privacy-dismissed",
   ];
+  const migrations = [];
   for (const key of keys) {
     const val = localStorage.getItem(key);
     if (val !== null) {
-      await localforage.setItem(key, val);
-      localStorage.removeItem(key);
+      migrations.push(
+        localforage.setItem(key, val).then(() => {
+          localStorage.removeItem(key);
+        })
+      );
     }
   }
+  if (migrations.length > 0) {
+    await Promise.all(migrations);
+  }
+  localStorage.setItem("kido-storage-migrated", "true");
 }
 
 export async function bootstrapApp() {
   await migrateFromLocalStorage();
-  await initHistory();
-  AppState.tabGroups = await loadGroups();
 
-  const storedHandle = await localforage.getItem(VAULT_HANDLE_KEY);
+  const yieldMain = () => {
+    if (typeof scheduler !== "undefined" && typeof scheduler.yield === "function") {
+      return scheduler.yield();
+    }
+    return new Promise((resolve) => setTimeout(resolve, 0));
+  };
+
+  const [tabs, activeTabId] = await Promise.all([
+    loadTabsFromStorage(),
+    loadActiveTabId(),
+  ]);
+
+  await yieldMain();
+
+  const [tabGroups, storedHandle, untitledCounter] = await Promise.all([
+    loadGroups(),
+    localforage.getItem(VAULT_HANDLE_KEY),
+    loadUntitledCounter(),
+  ]);
+  initHistory().catch(() => {});
+
+  AppState.tabGroups = tabGroups || [];
+  AppState.untitledCounter = untitledCounter || 0;
+  AppState.tabs = tabs || [];
+  AppState.activeTabId = activeTabId;
+
   if (storedHandle) {
     await initVault(storedHandle, true);
   }
-
-  AppState.untitledCounter = await loadUntitledCounter();
-  AppState.tabs = await loadTabsFromStorage();
-  AppState.activeTabId = await loadActiveTabId();
 
   // Create default tabs if none exist (only in normal mode)
   if (AppState.tabs.length === 0) {
@@ -77,15 +107,22 @@ export async function bootstrapApp() {
       }
 
       AppState.activeTabId = tab.id;
-      saveTabsToStorage(AppState.tabs);
-      saveActiveTabId(AppState.activeTabId);
+      // Defer saving initial default tabs to idle/async so it doesn't block the main thread
+      setTimeout(() => {
+        saveTabsToStorage(AppState.tabs);
+        saveActiveTabId(AppState.activeTabId);
+      }, 300);
     }
   } else if (!AppState.tabs.find((t) => t.id === AppState.activeTabId)) {
     AppState.activeTabId = AppState.tabs[0].id;
     saveActiveTabId(AppState.activeTabId);
   }
 
-  const shareContent = decodeShareHash();
+  const shareContent = await decodeShareHash();
+  const activeTab = AppState.tabs.find(
+    (t) => t.id === AppState.activeTabId,
+  );
+
   if (shareContent !== null && !AppState.localVaultMode) {
     const shareTab = createTab(shareContent, "Shared Note");
     AppState.tabs.push(shareTab);
@@ -97,29 +134,34 @@ export async function bootstrapApp() {
     }
     saveTabsToStorage(AppState.tabs);
     saveActiveTabId(AppState.activeTabId);
-  } else {
-    const activeTab = AppState.tabs.find(
-      (t) => t.id === AppState.activeTabId,
-    );
-    if (activeTab) {
-      // If it's a vault file and we have permission, try to read the latest content from disk
-      if (activeTab.handle && AppState.localVaultMode) {
-        try {
-          const perm = await activeTab.handle.queryPermission({ mode: 'readwrite' });
-          if (perm === 'granted') {
-            const file = await activeTab.handle.getFile();
-            activeTab.content = await file.text();
-          }
-        } catch (e) {
-          console.warn("Could not load active tab from file system on bootstrap, using cached content", e);
+  } else if (activeTab) {
+    // If it's a vault file and we have permission, try to read the latest content from disk
+    if (activeTab.handle && AppState.localVaultMode) {
+      try {
+        const perm = await activeTab.handle.queryPermission({ mode: 'readwrite' });
+        if (perm === 'granted') {
+          const file = await activeTab.handle.getFile();
+          activeTab.content = await file.text();
         }
+      } catch (e) {
+        console.warn("Could not load active tab from file system on bootstrap, using cached content", e);
       }
-      markdownEditor.value = activeTab.content || "";
-      restoreViewMode(activeTab.viewMode);
     }
+    markdownEditor.value = activeTab.content || "";
+    restoreViewMode(activeTab.viewMode);
   }
 
-  renderMarkdown();
+  // Yield to break long task between storage load and initial markdown parse
+  if (typeof scheduler !== "undefined" && typeof scheduler.yield === "function") {
+    await scheduler.yield();
+  } else {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+
+  const needsReRender = shareContent !== null || (activeTab && activeTab.content && activeTab.content !== sampleMarkdown);
+  if (needsReRender) {
+    renderMarkdown();
+  }
   requestAnimationFrame(() => {
     if (!AppState.localVaultMode) {
       const activeTab = AppState.tabs.find(
@@ -129,6 +171,14 @@ export async function bootstrapApp() {
     }
   });
   renderTabBar(AppState.tabs, AppState.activeTabId);
+
+  // Yield to allow browser to complete initial paint before wiring secondary listeners
+  if (typeof scheduler !== "undefined" && typeof scheduler.yield === "function") {
+    await scheduler.yield();
+  } else {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+
   initMobile();
   initShortcuts();
   initExtraShortcuts();

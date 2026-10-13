@@ -1,6 +1,9 @@
 import { AppState } from "../core/state.js";
 import { setViewMode, isSplitReversed, currentViewMode } from "./viewMode.js";
-export function startTour() {
+import { ensureTour } from "./loader.js";
+
+export async function startTour() {
+    await ensureTour();
     if (!window.driver) return;
     
     // Tạm ẩn privacy banner để không làm lệch vị trí popover

@@ -6,6 +6,7 @@ import { createTab, saveTabsToStorage, saveActiveTabId, renderTabBar } from '../
 import { restoreViewMode } from './viewMode.js';
 import { saveShareSnapshot } from '../core/history.js';
 import { setFocusMode } from './focusMode.js';
+import { ensurePako } from './loader.js';
 
 // ============================================
 // Share via URL (pako compression + base64url)
@@ -46,7 +47,7 @@ function decodeMarkdownFromShare(encoded) {
   return new TextDecoder().decode(decompressed);
 }
 
-function copyShareUrl(btn) {
+async function copyShareUrl(btn) {
   const currentTab = AppState.tabs.find((t) => t.id === AppState.activeTabId);
   const title = currentTab ? currentTab.title : "Untitled";
   saveShareSnapshot(markdownEditor.value, title);
@@ -54,6 +55,7 @@ function copyShareUrl(btn) {
   const markdownText = markdownEditor.value;
   let encoded;
   try {
+    await ensurePako();
     encoded = encodeMarkdownForShare(markdownText);
   } catch (e) {
     console.error("Share encoding failed:", e);
@@ -138,12 +140,7 @@ export function initShare() {
  * Extract and decode share hash from the URL.
  * Returns the decoded markdown string, or null if no share hash is present.
  */
-function decodeShareHash() {
-  if (typeof pako === "undefined") {
-    console.error("pako is undefined. Cannot load shared content.");
-    return null;
-  }
-
+export async function decodeShareHash() {
   let encoded = "";
   const hash = window.location.hash;
 
@@ -163,6 +160,12 @@ function decodeShareHash() {
   if (validMatch) {
     encoded = validMatch[0];
   } else {
+    return null;
+  }
+
+  await ensurePako();
+  if (typeof pako === "undefined") {
+    console.error("pako is undefined. Cannot load shared content.");
     return null;
   }
 
@@ -218,8 +221,8 @@ export function getShareModeFromHash() {
 /**
  * Handle share hash changes when the app is already open.
  */
-function loadFromShareHashChange() {
-  const shareContent = decodeShareHash();
+async function loadFromShareHashChange() {
+  const shareContent = await decodeShareHash();
   if (shareContent === null) return;
 
   const shareTab = createTab(shareContent, "Shared Note");
@@ -234,4 +237,3 @@ function loadFromShareHashChange() {
   renderTabBar(AppState.tabs, AppState.activeTabId);
 }
 
-export { decodeShareHash };

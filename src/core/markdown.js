@@ -1,5 +1,8 @@
 
+import { ensurePlantUml } from "../utils/loader.js";
+
 export function initMermaid() {
+  if (typeof mermaid === "undefined") return;
   const currentTheme = document.documentElement.getAttribute("data-theme");
   const mermaidTheme = currentTheme === "dark" ? "dark" : "default";
 
@@ -64,6 +67,12 @@ renderer.code = function (code, language) {
       return `<div class="plantuml-container" style="text-align: center; margin: 1.5em 0;">
                 <img src="https://www.plantuml.com/plantuml/svg/${encoded}" alt="PlantUML Diagram" style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'alert alert-warning py-2 mb-0\\'><small><i class=\\'bi bi-exclamation-triangle me-1\\'></i>Unable to render PlantUML diagram offline or syntax error.</small></div>';" />
               </div>`;
+    } else {
+      ensurePlantUml().then(() => {
+        const editor = document.getElementById("markdown-editor");
+        if (editor) editor.dispatchEvent(new Event("input"));
+      });
+      return `<div class="plantuml-container loading" style="text-align: center; margin: 1.5em 0; opacity: 0.6;"><small><i class="bi bi-hourglass-split me-1"></i>Loading PlantUML engine...</small></div>`;
     }
   }
 

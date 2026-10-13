@@ -3,6 +3,7 @@ import { AppState } from './state.js';
 import { renderTabBar, saveCurrentTabState, createTab, createGroup, switchTab, deleteTab, closeTab, GROUP_COLORS, saveGroups } from './tabs.js';
 import { markdownEditor } from './dom.js';
 import { renderMarkdown } from './render.js';
+import { ensureMiniSearch } from '../utils/loader.js';
 
   export async function doVaultRename(entry, newName, fallbackCb) {
     try {
@@ -286,6 +287,7 @@ import { renderMarkdown } from './render.js';
     AppState.vaultEntries = [];
     
     // Prepare MiniSearch
+    await ensureMiniSearch();
     if (window.MiniSearch) {
       AppState.vaultMiniSearch = new window.MiniSearch({
         fields: ['title', 'content'], 

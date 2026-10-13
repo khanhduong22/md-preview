@@ -1,3 +1,5 @@
+import { ensurePdfEngines } from "./loader.js";
+
 function withTimeout(promise, ms, errorMessage) {
   let timeoutId;
   const timeoutPromise = new Promise((_, reject) => {
@@ -213,6 +215,8 @@ export async function exportToPdf(markdown, exportPdfBtn, currentTheme) {
       exportPdfBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
       exportPdfBtn.disabled = true;
     }
+
+    await ensurePdfEngines();
 
     progressContainer = document.createElement('div');
     progressContainer.style.position = 'fixed';

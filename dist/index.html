@@ -28,44 +28,23 @@
     <meta property="twitter:image" content="https://md.khanhdp.com/assets/icon.jpg">
 
     <title>2ndBrain - Premium Editor</title>
-    <link href="/assets/icon-FhbvMKfR.jpg" rel="icon" type="image/jpg">
+    <link href="/assets/icon.jpg" rel="icon" type="image/jpeg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap"></noscript>
     <link rel="stylesheet" href="/vendor/bootstrap.min.css">
-    <link rel="stylesheet" href="/vendor/github-markdown.min.css">
-    <link rel="stylesheet" href="/vendor/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="/vendor/joypixels.min.css">
-    <link rel="stylesheet" href="/vendor/driver.css"/>
+    <link rel="preload" as="style" href="/vendor/github-markdown.min.css" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/vendor/github-markdown.min.css"></noscript>
+    <link rel="preload" as="style" href="/vendor/bootstrap-icons.min.css" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/vendor/bootstrap-icons.min.css"></noscript>
     
-    <!-- MathJax Configuration & SVG Vector Engine (loaded before Draw.io to prevent external math script injection) -->
-    <script src="/vendor/mathjax-config.js"></script>
-    <script src="/vendor/tex-svg.min.js"></script>
-
-    <!-- PlantUML & Draw.io dependencies -->
-    <script src="/vendor/plantuml-encoder.min.js"></script>
-    <script type="text/javascript" src="/vendor/viewer-static.min.js"></script>
-    
-    <!-- Core Markdown & Diagram libraries -->
-    <script src="/vendor/marked.min.js"></script>
-    <script src="/vendor/highlight.min.js"></script>
-    <script src="/vendor/gherkin.min.js"></script>
-    <script src="/vendor/purify.min.js"></script>
-    <script src="/vendor/FileSaver.min.js"></script>
-    <script src="/vendor/html2pdf.bundle.min.js"></script>
-    <script src="/vendor/mermaid.min.js"></script>
-    <script src="/vendor/joypixels.min.js"></script>
-    <script src="/vendor/jspdf.umd.min.js"></script>
-    <script src="/vendor/html2canvas.min.js"></script>
-    <script src="/vendor/driver.js.iife.js"></script>
-    
-    <script src="/vendor/pdfmake.min.js"></script>
-    <script src="/vendor/vfs_fonts.js"></script>
-    <script src="/vendor/pako.min.js"></script>
-    <script src="/vendor/panzoom.min.js"></script>
-    <script src="/vendor/diff.min.js"></script>
-    <script src="/vendor/localforage.min.js"></script>
-    <script src="/vendor/minisearch.min.js"></script>
+    <!-- Core Essential Libraries (Deferred - Non-Blocking) -->
+    <script defer src="/vendor/marked.min.js"></script>
+    <script defer src="/vendor/highlight.min.js"></script>
+    <script defer src="/vendor/purify.min.js"></script>
+    <script defer src="/vendor/localforage.min.js"></script>
+    <script defer src="/vendor/bootstrap.bundle.min.js"></script>
   <script type="module" crossorigin src="/script.js"></script>
   <link rel="stylesheet" crossorigin href="/styles.css">
 </head>
@@ -374,7 +353,166 @@
 
         <div class="content-container">
             <div class="editor-pane">
-                <textarea id="markdown-editor" placeholder="Type or paste your Markdown here..."></textarea>
+                <textarea id="markdown-editor" placeholder="Type or paste your Markdown here..."># Welcome to Markdown Viewer
+
+## ✨ Key Features
+- **Live Preview** with GitHub styling
+- **Smart Import/Export** (MD, HTML, PDF)
+- **Mermaid Diagrams** for visual documentation
+- **LaTeX Math Support** for scientific notation
+- **Emoji Support** 😄 👍 🎉
+
+## 💻 Code with Syntax Highlighting
+\`\`\`javascript
+  function renderMarkdown() {
+    const markdown = markdownEditor.value;
+    const html = marked.parse(markdown);
+    const sanitizedHtml = DOMPurify.sanitize(html);
+    markdownPreview.innerHTML = sanitizedHtml;
+    
+    // Syntax highlighting is handled automatically
+    // during the parsing phase by the marked renderer.
+    // Themes are applied instantly via CSS variables.
+  }
+\`\`\`
+
+## 🧮 Mathematical Expressions
+Write complex formulas with LaTeX syntax:
+
+Inline equation: $E = mc^2$
+
+Display equations:
+$\\frac{\\partial f}{\\partial x} = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}$
+
+$\\sum_{i=1}^{n} i^2 = \\frac{n(n+1)(2n+1)}{6}$
+
+## 📊 Mermaid Diagrams
+Create powerful visualizations directly in markdown:
+
+\`\`\`mermaid
+flowchart LR
+    A[Start] --&gt; B{Is it working?}
+    B --&gt;|Yes| C[Great!]
+    B --&gt;|No| D[Debug]
+    C --&gt; E[Deploy]
+    D --&gt; B
+\`\`\`
+
+### Sequence Diagram Example
+\`\`\`mermaid
+sequenceDiagram
+    User-&gt;&gt;Editor: Type markdown
+    Editor-&gt;&gt;Preview: Render content
+    User-&gt;&gt;Editor: Make changes
+    Editor-&gt;&gt;Preview: Update rendering
+    User-&gt;&gt;Export: Save as PDF
+\`\`\`
+
+## 📋 Task Management
+- [x] Create responsive layout
+- [x] Implement live preview with GitHub styling
+- [x] Add syntax highlighting for code blocks
+- [x] Support math expressions with LaTeX
+- [x] Enable mermaid diagrams
+
+## 🆚 Feature Comparison
+
+| Feature                  | Markdown Viewer (Ours) | Other Markdown Editors  |
+|:-------------------------|:----------------------:|:-----------------------:|
+| Live Preview             | ✅ GitHub-Styled       | ✅                     |
+| Sync Scrolling           | ✅ Two-way             | 🔄 Partial/None        |
+| Mermaid Support          | ✅                     | ❌/Limited             |
+| LaTeX Math Rendering     | ✅                     | ❌/Limited             |
+
+### 📝 Multi-row Headers Support
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th rowspan="2"&gt;Document Type&lt;/th&gt;
+      &lt;th colspan="2"&gt;Support&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Markdown Viewer (Ours)&lt;/th&gt;
+      &lt;th&gt;Other Markdown Editors&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Technical Docs&lt;/td&gt;
+      &lt;td&gt;Full + Diagrams&lt;/td&gt;
+      &lt;td&gt;Limited/Basic&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Research Notes&lt;/td&gt;
+      &lt;td&gt;Full + Math&lt;/td&gt;
+      &lt;td&gt;Partial&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Developer Guides&lt;/td&gt;
+      &lt;td&gt;Full + Export Options&lt;/td&gt;
+      &lt;td&gt;Basic&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+## 📝 Text Formatting Examples
+
+### Text Formatting
+
+Text can be formatted in various ways for ~~strikethrough~~, **bold**, *italic*, or ***bold italic***.
+
+For highlighting important information, use &lt;mark&gt;highlighted text&lt;/mark&gt; or add &lt;u&gt;underlines&lt;/u&gt; where appropriate.
+
+### Superscript and Subscript
+
+Chemical formulas: H&lt;sub&gt;2&lt;/sub&gt;O, CO&lt;sub&gt;2&lt;/sub&gt;  
+Mathematical notation: x&lt;sup&gt;2&lt;/sup&gt;, e&lt;sup&gt;iπ&lt;/sup&gt;
+
+### Keyboard Keys
+
+Press &lt;kbd&gt;Ctrl&lt;/kbd&gt; + &lt;kbd&gt;B&lt;/kbd&gt; for bold text.
+
+### Abbreviations
+
+&lt;abbr title="Graphical User Interface"&gt;GUI&lt;/abbr&gt;  
+&lt;abbr title="Application Programming Interface"&gt;API&lt;/abbr&gt;
+
+### Text Alignment
+
+&lt;div style="text-align: center"&gt;
+Centered text for headings or important notices
+&lt;/div&gt;
+
+&lt;div style="text-align: right"&gt;
+Right-aligned text (for dates, signatures, etc.)
+&lt;/div&gt;
+
+### **Lists**
+
+Create bullet points:
+* Item 1
+* Item 2
+  * Nested item
+    * Nested further
+
+### **Links and Images**
+
+Add a [link](https://md.khanhdp.com) to important resources.
+
+Embed an image:
+![Markdown Logo](https://md.khanhdp.com/assets/icon.jpg)
+
+### **Blockquotes**
+
+Quote someone famous:
+&gt; "The best way to predict the future is to invent it." - Alan Kay
+
+---
+
+## 🛡️ Security Note
+
+This is a fully client-side application. Your content never leaves your browser and stays secure on your device.</textarea>
             </div>
             <!-- Resize Divider - Story 1.3 -->
             <div class="resize-divider" role="separator" aria-orientation="vertical" aria-label="Resize panes" tabindex="0">
@@ -501,6 +639,5 @@
     </div>
     <div id="history-overlay" class="history-overlay" style="display:none;"></div>
 
-    <script src="/vendor/bootstrap.bundle.min.js"></script>
 </body>
 </html>

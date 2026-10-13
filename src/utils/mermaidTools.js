@@ -3,6 +3,8 @@
  * Features: Export PNG/SVG, Copy PNG to clipboard, and Pan/Zoom modal.
  */
 
+import { ensurePanzoom } from "./loader.js";
+
 export function svgToDataUrl(svgEl) {
   const clone = svgEl.cloneNode(true);
   const bbox = svgEl.getBoundingClientRect();
@@ -156,14 +158,17 @@ export function openMermaidZoomModal(container) {
 
   mermaidZoomModal.classList.add('active');
 
-  setTimeout(() => {
-    panzoomInstance = window.panzoom(svgClone, {
-      maxZoom: 10,
-      minZoom: 0.1,
-      smoothScroll: true,
-      zoomDoubleClickSpeed: 1,
-      bounds: false,
-    });
+  setTimeout(async () => {
+    await ensurePanzoom();
+    if (window.panzoom) {
+      panzoomInstance = window.panzoom(svgClone, {
+        maxZoom: 10,
+        minZoom: 0.1,
+        smoothScroll: true,
+        zoomDoubleClickSpeed: 1,
+        bounds: false,
+      });
+    }
   }, 50);
 }
 

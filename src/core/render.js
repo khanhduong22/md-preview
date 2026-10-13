@@ -9,6 +9,7 @@ import {
 import { processEmojis } from "../utils/emoji.js";
 import { addMermaidToolbars } from "../utils/mermaidTools.js";
 import { initMermaid } from "./markdown.js";
+import { ensureMermaid, ensureMathJax, ensureDrawio } from "../utils/loader.js";
 
 const markdownPreview = document.getElementById('markdown-preview');
 let markdownRenderTimeout = null;
@@ -27,66 +28,119 @@ export function renderMarkdown() {
     markdownPreview.innerHTML = sanitizedHtml;
 
     processEmojis(markdownPreview);
-
-    // Reinitialize mermaid with current theme before rendering diagrams
-    initMermaid();
-
-    try {
-      const mermaidNodes = markdownPreview.querySelectorAll(".mermaid");
-      if (mermaidNodes.length > 0) {
-        mermaidNodes.forEach((node) => {
-          if (node.innerHTML.includes("\\n")) {
-            node.innerHTML = node.innerHTML.replace(/\\n/g, "<br/>");
-          }
-        });
-        mermaid.run({
-          nodes: Array.from(mermaidNodes),
-          suppressErrors: true
-        })
-          .then(() => {
-            if (seq === currentRenderSeq) addMermaidToolbars();
-          })
-          .catch((e) => {
-            console.warn("Mermaid rendering failed:", e);
-            if (seq === currentRenderSeq) addMermaidToolbars();
-          });
-      }
-    } catch (e) {
-      console.warn("Mermaid rendering failed:", e);
-    }
-
-    if (window.MathJax) {
-      try {
-        if (typeof MathJax.typesetPromise === 'function') {
-          MathJax.typesetPromise([markdownPreview]).catch((err) => {
-            console.warn("MathJax typesetting failed:", err);
-          });
-        } else if (MathJax.startup && MathJax.startup.promise) {
-          MathJax.startup.promise.then(() => {
-            if (seq === currentRenderSeq && typeof MathJax.typesetPromise === 'function') {
-              MathJax.typesetPromise([markdownPreview]).catch((err) => {
-                console.warn("MathJax typesetting failed:", err);
-              });
-            }
-          });
-        }
-      } catch (e) {
-        console.warn("MathJax rendering failed:", e);
-      }
-    }
-
-    // Initialize Draw.io diagrams
-    if (window.GraphViewer) {
-      try {
-        window.GraphViewer.processElements();
-      } catch (e) {
-        console.warn("Draw.io GraphViewer rendering failed:", e);
-      }
-    }
-
     updateDocumentStats();
     updateMobileStats();
     updateTOC();
+
+    // Yield helper to avoid long tasks (>50ms)
+    const yieldMainThread = () => {
+      if (typeof scheduler !== "undefined" && typeof scheduler.yield === "function") {
+        return scheduler.yield();
+      }
+      return new Promise((resolve) => setTimeout(resolve, 0));
+    };
+
+    // Tier 2: IntersectionObserver + Pure Interaction triggering
+    const observeOrInteract = (elements, onTrigger) => {
+      let triggered = false;
+      const fire = () => {
+        if (triggered) return;
+        triggered = true;
+        cleanup();
+        onTrigger();
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            fire();
+            break;
+          }
+        }
+      }, { rootMargin: '300px' });
+
+      elements.forEach((el) => observer.observe(el));
+
+      const events = ['scroll', 'touchstart', 'pointerdown', 'keydown', 'wheel'];
+      const cleanup = () => {
+        observer.disconnect();
+        events.forEach((e) => window.removeEventListener(e, fire));
+      };
+      events.forEach((e) => window.addEventListener(e, fire, { passive: true, once: true }));
+    };
+
+    const mermaidNodes = markdownPreview.querySelectorAll(".mermaid");
+    if (mermaidNodes.length > 0) {
+      observeOrInteract(Array.from(mermaidNodes), async () => {
+        if (seq !== currentRenderSeq) return;
+        try {
+          await yieldMainThread();
+          await ensureMermaid();
+          await yieldMainThread();
+          if (seq === currentRenderSeq) {
+            initMermaid();
+            mermaidNodes.forEach((node) => {
+              if (node.innerHTML.includes("\\n")) {
+                node.innerHTML = node.innerHTML.replace(/\\n/g, "<br/>");
+              }
+            });
+            await mermaid.run({
+              nodes: Array.from(mermaidNodes),
+              suppressErrors: true,
+            });
+            if (seq === currentRenderSeq) addMermaidToolbars();
+          }
+        } catch (e) {
+          console.warn("Mermaid rendering failed:", e);
+          if (seq === currentRenderSeq) addMermaidToolbars();
+        }
+      });
+    }
+
+    const hasMath = /(\$\$|\\\[|\$|\\\()/.test(markdown);
+    if (hasMath) {
+      const mathCandidates = Array.from(markdownPreview.querySelectorAll("p, li, td, div")).filter(
+        el => /(\$\$|\\\[|\$|\\\()/.test(el.textContent)
+      );
+      const targetMathElements = mathCandidates.length > 0 ? mathCandidates : [markdownPreview];
+
+      observeOrInteract(targetMathElements, async () => {
+        if (seq !== currentRenderSeq) return;
+        try {
+          await yieldMainThread();
+          const mj = await ensureMathJax();
+          await yieldMainThread();
+          if (seq === currentRenderSeq && mj) {
+            if (typeof mj.typesetPromise === "function") {
+              await mj.typesetPromise([markdownPreview]);
+            } else if (mj.startup && mj.startup.promise) {
+              await mj.startup.promise;
+              if (seq === currentRenderSeq && typeof mj.typesetPromise === "function") {
+                await mj.typesetPromise([markdownPreview]);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("MathJax typesetting failed:", e);
+        }
+      });
+    }
+
+    const drawioNodes = markdownPreview.querySelectorAll(".mxgraph");
+    if (drawioNodes.length > 0) {
+      observeOrInteract(Array.from(drawioNodes), async () => {
+        if (seq !== currentRenderSeq) return;
+        try {
+          await yieldMainThread();
+          await ensureDrawio();
+          if (seq === currentRenderSeq && window.GraphViewer) {
+            window.GraphViewer.processElements();
+          }
+        } catch (e) {
+          console.warn("Draw.io GraphViewer rendering failed:", e);
+        }
+      });
+    }
   } catch (e) {
     console.error("Markdown rendering failed:", e);
     const escapeHtml = (str) => String(str || '').replace(/[&<>"']/g, (m) => ({

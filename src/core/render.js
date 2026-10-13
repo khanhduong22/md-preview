@@ -22,7 +22,7 @@ export function renderMarkdown() {
     const markdown = markdownEditor.value;
     const isAlreadyPrerendered =
       markdownPreview.dataset.prerendered === "true" &&
-      markdown === markdownEditor.defaultValue;
+      (markdown === markdownEditor.defaultValue || (markdown && markdownEditor.defaultValue && markdown.trim() === markdownEditor.defaultValue.trim()));
 
     if (!isAlreadyPrerendered) {
       const html = marked.parse(markdown);

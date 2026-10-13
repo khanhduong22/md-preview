@@ -3,17 +3,20 @@ import fs from 'fs';
 
 test.describe('Visual Regression Testing', () => {
   test('trang chủ lúc mới vào (Light Mode)', async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+        localStorage.setItem('kido-privacy-dismissed', '1');
+      } catch {}
+    });
+
     // 1. Mở trang web (Playwright sẽ tự bật dev server ở cổng 5173)
     await page.goto('/');
 
     // 2. Chờ một tí cho các hiệu ứng, font chữ tải xong hoàn toàn
     await page.waitForLoadState('networkidle');
-    
-    // Tắt cái banner "Got it" bằng JS thuần để khỏi dính lỗi scroll/viewport
-    await page.evaluate(() => {
-      const banner = document.getElementById('privacy-notice');
-      if (banner) banner.style.display = 'none';
-    });
+    await page.waitForTimeout(500);
 
     // 3. Chụp màn hình và so sánh! (Lần đầu chạy nó sẽ tự tạo file mẫu)
     // - maxDiffPixels: cho phép lệch tối đa 100 pixel

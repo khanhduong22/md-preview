@@ -15,6 +15,7 @@ import { initMermaidZoomModal } from "./utils/mermaidTools.js";
 import { initSidebars } from "./ui/sidebar.js";
 
 // Set initial value so it doesn't flash empty
+markdownEditor.defaultValue = sampleMarkdown;
 markdownEditor.value = sampleMarkdown;
 
 document.addEventListener("DOMContentLoaded", () => {

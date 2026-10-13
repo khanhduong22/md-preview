@@ -511,21 +511,23 @@ import { cancelVaultAutoSave } from './autosave.js';
       tabList.appendChild(createTabElement(tab, null));
     });
 
-    // "+" button
-    const newBtn = document.createElement('button');
-    newBtn.className = 'tab-new-btn';
-    newBtn.title = 'New Tab (Ctrl+T)';
-    newBtn.setAttribute('aria-label', 'Open new tab');
-    newBtn.replaceChildren();
-    const icon = document.createElement('i');
-    icon.className = 'bi bi-plus-lg';
-    newBtn.appendChild(icon);
-    newBtn.addEventListener('click', function() { newTab(); });
-    const newBtnWrapper = document.createElement('div');
-    newBtnWrapper.setAttribute('role', 'presentation');
-    newBtnWrapper.style.display = 'inline-flex';
-    newBtnWrapper.appendChild(newBtn);
-    tabList.appendChild(newBtnWrapper);
+    // "+" button outside tab-list to strictly comply with W3C ARIA role="tablist" child rules
+    let newBtn = document.getElementById('tab-new-btn');
+    if (!newBtn && tabList.parentNode) {
+      newBtn = document.createElement('button');
+      newBtn.id = 'tab-new-btn';
+      newBtn.className = 'tab-new-btn';
+      newBtn.title = 'New Tab (Ctrl+T)';
+      newBtn.setAttribute('aria-label', 'Open new tab');
+      const icon = document.createElement('i');
+      icon.className = 'bi bi-plus-lg';
+      newBtn.appendChild(icon);
+      tabList.parentNode.insertBefore(newBtn, tabList.nextSibling);
+    }
+    if (newBtn && !newBtn.dataset.bound) {
+      newBtn.dataset.bound = 'true';
+      newBtn.addEventListener('click', function() { newTab(); });
+    }
 
     // Auto-scroll active tab into view
     const activeItem = tabList.querySelector('.tab-item.active');

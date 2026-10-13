@@ -74,10 +74,12 @@ export function toggleSyncScrolling() {
   syncScrollingEnabled = !syncScrollingEnabled;
   if (syncScrollingEnabled) {
     toggleSyncButton.innerHTML = '<i class="bi bi-link"></i> <span class="btn-label">On</span>';
+    toggleSyncButton.setAttribute("aria-label", "Sync On");
     toggleSyncButton.classList.add("sync-enabled");
     toggleSyncButton.classList.remove("sync-disabled", "border-primary");
   } else {
     toggleSyncButton.innerHTML = '<i class="bi bi-link-45deg"></i> <span class="btn-label">Off</span>';
+    toggleSyncButton.setAttribute("aria-label", "Sync Off");
     toggleSyncButton.classList.add("sync-disabled", "border-primary");
     toggleSyncButton.classList.remove("sync-enabled");
   }

@@ -56,7 +56,11 @@ body {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-color);
-  padding: 1rem;
+  padding: 0 1rem;
+  height: 64px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
   transition: background-color 0.3s ease;
   position: relative;
   z-index: 100;
@@ -82,7 +86,6 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: width 0.1s linear;
 }
 .sidebar-explorer.is-resizing {
   transition: none !important;
@@ -431,10 +434,14 @@ body.focus-mode .header-reveal-zone {
   color: var(--text-color);
   border-radius: 6px;
   padding: 6px 12px;
+  height: 38px;
+  min-height: 38px;
+  min-width: 38px;
   font-size: 14px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   transition: all 0.2s ease;
 }
@@ -1064,25 +1071,30 @@ a:focus {
 /* Header layout for three sections */
 .header-container {
   position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .header-left {
-  flex: 1;
-  justify-content: flex-start;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .header-right {
-  flex: 1;
-  justify-content: flex-end;
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 /* View Mode Button Group */
 .view-mode-group {
   display: flex;
   gap: 0;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: static;
+  transform: none;
+  flex-shrink: 0;
 }
 
 .view-mode-btn {
@@ -1090,10 +1102,13 @@ a:focus {
   border: 1px solid var(--border-color);
   color: var(--text-color);
   padding: 6px 12px;
+  height: 38px;
+  min-height: 38px;
   font-size: 14px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   transition: all 0.2s ease;
 }

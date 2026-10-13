@@ -25,6 +25,39 @@ export function initExportSetup() {
     });
   }
 
+  // Handle Bootstrap dropdown toggles natively (replaces 25KB bootstrap.bundle.min.js)
+  document.addEventListener("click", function (e) {
+    const toggle = e.target.closest('[data-bs-toggle="dropdown"]');
+    const openMenus = document.querySelectorAll(".dropdown-menu.show");
+
+    if (toggle) {
+      e.preventDefault();
+      const parent = toggle.closest(".dropdown");
+      const menu = parent ? parent.querySelector(".dropdown-menu") : null;
+      const isOpen = menu && menu.classList.contains("show");
+
+      openMenus.forEach((m) => {
+        m.classList.remove("show");
+        const btn = m.closest(".dropdown")?.querySelector('[data-bs-toggle="dropdown"]');
+        if (btn) btn.setAttribute("aria-expanded", "false");
+      });
+
+      if (!isOpen && menu) {
+        menu.classList.add("show");
+        toggle.setAttribute("aria-expanded", "true");
+      }
+      return;
+    }
+
+    if (!e.target.closest(".dropdown-menu") || e.target.closest(".dropdown-item")) {
+      openMenus.forEach((m) => {
+        m.classList.remove("show");
+        const btn = m.closest(".dropdown")?.querySelector('[data-bs-toggle="dropdown"]');
+        if (btn) btn.setAttribute("aria-expanded", "false");
+      });
+    }
+  });
+
   const triggerDownload = (blob, filename) => {
     if (typeof saveAs !== "undefined") {
       saveAs(blob, filename);

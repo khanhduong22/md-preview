@@ -1,5 +1,5 @@
 
-import { ensurePlantUml } from "../utils/loader.js";
+import { ensurePlantUml, ensureHljs } from "../utils/loader.js";
 
 export function initMermaid() {
   if (typeof mermaid === "undefined") return;
@@ -95,11 +95,45 @@ renderer.code = function (code, language) {
             </div>`;
   }
 
-  const validLanguage = hljs.getLanguage(language) ? language : "plaintext";
-  const highlightedCode = hljs.highlight(code, {
-    language: validLanguage,
-  }).value;
-  return `<pre><code class="hljs ${validLanguage}">${highlightedCode}</code></pre>`;
+  if (typeof hljs !== "undefined" && hljs.getLanguage) {
+    const validLanguage = hljs.getLanguage(language) ? language : "plaintext";
+    const highlightedCode = hljs.highlight(code, {
+      language: validLanguage,
+    }).value;
+    return `<pre><code class="hljs ${validLanguage}">${highlightedCode}</code></pre>`;
+  }
+
+  const validLang = language || "plaintext";
+  const escaped = code
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  ensureHljs().then((h) => {
+    if (!h) return;
+    document.querySelectorAll("pre code.hljs:not([data-highlighted=\"true\"])").forEach((block) => {
+      try {
+        h.highlightElement(block);
+        block.dataset.highlighted = "true";
+      } catch {}
+    });
+  }).catch(() => {});
+  return `<pre><code class="hljs ${validLang}">${escaped}</code></pre>`;
+};
+
+renderer.checkbox = function (checked) {
+  return (
+    '<input ' +
+    (checked ? 'checked="" ' : '') +
+    'disabled="" type="checkbox" aria-label="Task item"' +
+    (this.options.xhtml ? ' /' : '') +
+    '> '
+  );
+};
+
+renderer.image = function (href, title, text) {
+  const isLogo = href && href.includes("assets/icon.jpg");
+  const sizeAttr = isLogo ? ' width="200" height="200"' : '';
+  return `<img src="${href}" alt="${text || ''}"${title ? ` title="${title}"` : ''}${sizeAttr} loading="lazy" />`;
 };
 
 renderer.link = function (href, title, text) {

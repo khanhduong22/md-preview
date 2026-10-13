@@ -33,7 +33,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap"></noscript>
-    <link rel="stylesheet" href="/vendor/bootstrap.min.css">
     <link rel="preload" as="style" href="/vendor/github-markdown.min.css" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="/vendor/github-markdown.min.css"></noscript>
     <link rel="preload" as="style" href="/vendor/bootstrap-icons.min.css" onload="this.onload=null;this.rel='stylesheet'">
@@ -41,10 +40,8 @@
     
     <!-- Core Essential Libraries (Deferred - Non-Blocking) -->
     <script defer src="/vendor/marked.min.js"></script>
-    <script defer src="/vendor/highlight.min.js"></script>
     <script defer src="/vendor/purify.min.js"></script>
     <script defer src="/vendor/localforage.min.js"></script>
-    <script defer src="/vendor/bootstrap.bundle.min.js"></script>
 </head>
 <body>
     <!-- Privacy Notice Banner -->
@@ -181,8 +178,8 @@
                     
                     <div id="mobile-menu-panel" class="mobile-menu-panel">
                         <div class="mobile-menu-header">
-                            <h5>Menu</h5>
-                            <button id="close-mobile-menu" class="tool-button">
+                            <h2 class="h5 mb-0">Menu</h2>
+                            <button id="close-mobile-menu" class="tool-button" aria-label="Close menu">
                                 <i class="bi bi-x-lg"></i>
                             </button>
                         </div>
@@ -517,7 +514,159 @@ This is a fully client-side application. Your content never leaves your browser 
                 <div class="resize-divider-handle"></div>
             </div>
             <div class="preview-pane">
-                <div id="markdown-preview" class="markdown-body"></div>
+                <div id="markdown-preview" class="markdown-body" data-prerendered="true">
+<h1 id="welcome-to-markdown-viewer">Welcome to Markdown Viewer</h1>
+<h2 id="key-features">✨ Key Features</h2>
+<ul>
+<li><strong>Live Preview</strong> with GitHub styling</li>
+<li><strong>Smart Import/Export</strong> (MD, HTML, PDF)</li>
+<li><strong>Mermaid Diagrams</strong> for visual documentation</li>
+<li><strong>LaTeX Math Support</strong> for scientific notation</li>
+<li><strong>Emoji Support</strong> 😄 👍 🎉</li>
+</ul>
+<h2 id="code-with-syntax-highlighting">💻 Code with Syntax Highlighting</h2>
+<pre><code class="hljs javascript">  <span class="hljs-keyword">function</span> <span class="hljs-title function_">renderMarkdown</span>(<span class="hljs-params"></span>) {
+    <span class="hljs-keyword">const</span> markdown = markdownEditor.<span class="hljs-property">value</span>;
+    <span class="hljs-keyword">const</span> html = marked.<span class="hljs-title function_">parse</span>(markdown);
+    <span class="hljs-keyword">const</span> sanitizedHtml = <span class="hljs-title class_">DOMPurify</span>.<span class="hljs-title function_">sanitize</span>(html);
+    markdownPreview.<span class="hljs-property">innerHTML</span> = sanitizedHtml;
+    
+    <span class="hljs-comment">// Syntax highlighting is handled automatically</span>
+    <span class="hljs-comment">// during the parsing phase by the marked renderer.</span>
+    <span class="hljs-comment">// Themes are applied instantly via CSS variables.</span>
+  }</code></pre><h2 id="mathematical-expressions">🧮 Mathematical Expressions</h2>
+<p>Write complex formulas with LaTeX syntax:</p>
+<p>Inline equation: $E = mc^2$</p>
+<p>Display equations:
+$\frac{\partial f}{\partial x} = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}$</p>
+<p>$\sum_{i=1}^{n} i^2 = \frac{n(n+1)(2n+1)}{6}$</p>
+<h2 id="mermaid-diagrams">📊 Mermaid Diagrams</h2>
+<p>Create powerful visualizations directly in markdown:</p>
+<div class="mermaid-container"><pre id="mermaid-diagram-ppl30n0je" class="mermaid">flowchart LR
+    A[Start] --&gt; B{Is it working?}
+    B --&gt;|Yes| C[Great!]
+    B --&gt;|No| D[Debug]
+    C --&gt; E[Deploy]
+    D --&gt; B</pre></div><h3 id="sequence-diagram-example">Sequence Diagram Example</h3>
+<div class="mermaid-container"><pre id="mermaid-diagram-et67zgn0r" class="mermaid">sequenceDiagram
+    User-&gt;&gt;Editor: Type markdown
+    Editor-&gt;&gt;Preview: Render content
+    User-&gt;&gt;Editor: Make changes
+    Editor-&gt;&gt;Preview: Update rendering
+    User-&gt;&gt;Export: Save as PDF</pre></div><h2 id="task-management">📋 Task Management</h2>
+<ul>
+<li><input type="checkbox" aria-label="Task item" disabled="" checked=""> Create responsive layout</li>
+<li><input type="checkbox" aria-label="Task item" disabled="" checked=""> Implement live preview with GitHub styling</li>
+<li><input type="checkbox" aria-label="Task item" disabled="" checked=""> Add syntax highlighting for code blocks</li>
+<li><input type="checkbox" aria-label="Task item" disabled="" checked=""> Support math expressions with LaTeX</li>
+<li><input type="checkbox" aria-label="Task item" disabled="" checked=""> Enable mermaid diagrams</li>
+</ul>
+<h2 id="feature-comparison">🆚 Feature Comparison</h2>
+<table>
+<thead>
+<tr>
+<th align="left">Feature</th>
+<th align="center">Markdown Viewer (Ours)</th>
+<th align="center">Other Markdown Editors</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Live Preview</td>
+<td align="center">✅ GitHub-Styled</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td align="left">Sync Scrolling</td>
+<td align="center">✅ Two-way</td>
+<td align="center">🔄 Partial/None</td>
+</tr>
+<tr>
+<td align="left">Mermaid Support</td>
+<td align="center">✅</td>
+<td align="center">❌/Limited</td>
+</tr>
+<tr>
+<td align="left">LaTeX Math Rendering</td>
+<td align="center">✅</td>
+<td align="center">❌/Limited</td>
+</tr>
+</tbody></table>
+<h3 id="multi-row-headers-support">📝 Multi-row Headers Support</h3>
+<table>
+  <thead>
+    <tr>
+      <th rowspan="2">Document Type</th>
+      <th colspan="2">Support</th>
+    </tr>
+    <tr>
+      <th>Markdown Viewer (Ours)</th>
+      <th>Other Markdown Editors</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Technical Docs</td>
+      <td>Full + Diagrams</td>
+      <td>Limited/Basic</td>
+    </tr>
+    <tr>
+      <td>Research Notes</td>
+      <td>Full + Math</td>
+      <td>Partial</td>
+    </tr>
+    <tr>
+      <td>Developer Guides</td>
+      <td>Full + Export Options</td>
+      <td>Basic</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="text-formatting-examples">📝 Text Formatting Examples</h2>
+<h3 id="text-formatting">Text Formatting</h3>
+<p>Text can be formatted in various ways for <del>strikethrough</del>, <strong>bold</strong>, <em>italic</em>, or <em><strong>bold italic</strong></em>.</p>
+<p>For highlighting important information, use <mark>highlighted text</mark> or add <u>underlines</u> where appropriate.</p>
+<h3 id="superscript-and-subscript">Superscript and Subscript</h3>
+<p>Chemical formulas: H<sub>2</sub>O, CO<sub>2</sub><br>Mathematical notation: x<sup>2</sup>, e<sup>iπ</sup></p>
+<h3 id="keyboard-keys">Keyboard Keys</h3>
+<p>Press <kbd>Ctrl</kbd> + <kbd>B</kbd> for bold text.</p>
+<h3 id="abbreviations">Abbreviations</h3>
+<p><abbr title="Graphical User Interface">GUI</abbr><br><abbr title="Application Programming Interface">API</abbr></p>
+<h3 id="text-alignment">Text Alignment</h3>
+<div style="text-align: center">
+Centered text for headings or important notices
+</div>
+
+<div style="text-align: right">
+Right-aligned text (for dates, signatures, etc.)
+</div>
+
+<h3 id="lists"><strong>Lists</strong></h3>
+<p>Create bullet points:</p>
+<ul>
+<li>Item 1</li>
+<li>Item 2<ul>
+<li>Nested item<ul>
+<li>Nested further</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="links-and-images"><strong>Links and Images</strong></h3>
+<p>Add a <a href="https://md.khanhdp.com" rel="noopener noreferrer">link</a> to important resources.</p>
+<p>Embed an image:
+<img alt="Markdown Logo" src="https://md.khanhdp.com/assets/icon.jpg" width="200" height="200" loading="lazy"></p>
+<h3 id="blockquotes"><strong>Blockquotes</strong></h3>
+<p>Quote someone famous:</p>
+<blockquote>
+<p>"The best way to predict the future is to invent it." - Alan Kay</p>
+</blockquote>
+<hr>
+<h2 id="security-note">🛡️ Security Note</h2>
+<p>This is a fully client-side application. Your content never leaves your browser and stays secure on your device.</p>
+
+                </div>
             </div>
         </div>
         </main>

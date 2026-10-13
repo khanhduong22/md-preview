@@ -1,3 +1,4 @@
+@import "../public/vendor/bootstrap.min.css";
 :root {
   --bg-color: #ffffff;
   --editor-bg: #f6f8fa;

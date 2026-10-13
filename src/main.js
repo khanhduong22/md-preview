@@ -27,7 +27,11 @@ document.addEventListener("DOMContentLoaded", () => {
   bootstrapApp();
   initAutoSave();
   initFocusMode();
-  initTour();
-  initMermaidZoomModal();
-  initSidebars();
+
+  // Defer non-critical UI to next frame to eliminate forced reflows and long tasks on startup
+  requestAnimationFrame(() => {
+    initTour();
+    initMermaidZoomModal();
+    initSidebars();
+  });
 });

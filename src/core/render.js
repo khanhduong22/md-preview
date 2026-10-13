@@ -20,12 +20,20 @@ export function renderMarkdown() {
   const seq = ++currentRenderSeq;
   try {
     const markdown = markdownEditor.value;
-    const html = marked.parse(markdown);
-    const sanitizedHtml = DOMPurify.sanitize(html, {
-      ADD_TAGS: ["mjx-container"],
-      ADD_ATTR: ["id", "class", "style", "data-mxgraph"],
-    });
-    markdownPreview.innerHTML = sanitizedHtml;
+    const isAlreadyPrerendered =
+      markdownPreview.dataset.prerendered === "true" &&
+      markdown === markdownEditor.defaultValue;
+
+    if (!isAlreadyPrerendered) {
+      const html = marked.parse(markdown);
+      const sanitizedHtml = DOMPurify.sanitize(html, {
+        ADD_TAGS: ["mjx-container"],
+        ADD_ATTR: ["id", "class", "style", "data-mxgraph"],
+      });
+      markdownPreview.innerHTML = sanitizedHtml;
+    } else {
+      delete markdownPreview.dataset.prerendered;
+    }
 
     processEmojis(markdownPreview);
     updateDocumentStats();

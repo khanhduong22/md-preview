@@ -152,3 +152,10 @@ export async function ensurePako() {
   await loadScript("/vendor/pako.min.js");
   return window.pako;
 }
+
+export async function ensureHljs() {
+  if (typeof window.hljs !== "undefined") return window.hljs;
+  await loadScript("/vendor/highlight.min.js");
+  return window.hljs;
+}
+

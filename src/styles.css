@@ -1166,7 +1166,7 @@ a:focus-visible {
 }
 
 .content-container.view-editor-only .editor-pane {
-  flex: 1;
+  flex: 1 !important;
   border-right: none;
 }
 
@@ -1175,7 +1175,7 @@ a:focus-visible {
 }
 
 .content-container.view-preview-only .preview-pane {
-  flex: 1;
+  flex: 1 !important;
 }
 
 .content-container.view-split .editor-pane,

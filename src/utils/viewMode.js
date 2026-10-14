@@ -156,8 +156,8 @@ export function setViewMode(mode) {
   if (mode === "split") {
     // Restore preserved pane widths when entering split mode
     applyPaneWidths();
-  } else if (previousMode === "split") {
-    // Reset pane widths when leaving split mode
+  } else {
+    // Reset pane widths when in single-pane mode (editor or preview)
     resetPaneWidths();
   }
 

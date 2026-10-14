@@ -225,9 +225,12 @@ test.describe('Application Features', () => {
     const activeTab = newPage.locator('.tab-item.active');
     await expect(activeTab).toContainText('Shared Note');
 
-    // 6. Verify shared note enters focus mode and preview mode automatically
+    // 6. Verify shared note enters focus mode and preview mode automatically (100% full width)
     await expect(newPage.locator('body')).toHaveClass(/focus-mode/);
     await expect(newPage.locator('.content-container')).toHaveClass(/view-preview-only/);
+    const containerBox = await newPage.locator('.content-container').boundingBox();
+    const previewBox = await newPage.locator('.preview-pane').boundingBox();
+    expect(previewBox.width).toBeCloseTo(containerBox.width, 0);
 
     // 7. Verify #exit-focus-btn is present and functional
     const exitFocusBtn = newPage.locator('#exit-focus-btn');

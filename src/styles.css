@@ -548,8 +548,8 @@ body.focus-mode .header-reveal-zone {
 }
 
 /* Focus outline for accessibility */
-button:focus, 
-a:focus {
+button:focus-visible, 
+a:focus-visible {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
 }
@@ -1079,22 +1079,28 @@ a:focus {
 }
 
 .header-left {
-  flex: 0 1 auto;
+  flex: 1 1 0%;
   min-width: 0;
+  justify-content: flex-start;
 }
 
 .header-right {
-  flex: 0 0 auto;
-  margin-left: auto;
+  flex: 1 1 0%;
+  justify-content: flex-end;
 }
 
 /* View Mode Button Group */
 .view-mode-group {
   display: flex;
+  align-items: center;
   gap: 0;
   position: static;
   transform: none;
   flex-shrink: 0;
+}
+
+.view-mode-group .vr {
+  align-self: center;
 }
 
 .view-mode-btn {
@@ -1123,6 +1129,15 @@ a:focus {
 
 .view-mode-btn:not(:last-child) {
   border-right: none;
+}
+
+.view-mode-btn[data-mode="preview"] {
+  border-radius: 0 6px 6px 0;
+  border-right: 1px solid var(--border-color);
+}
+
+.view-mode-btn.focus-mode-toggle-btn {
+  border-radius: 6px;
 }
 
 .view-mode-btn:hover {
@@ -1194,7 +1209,6 @@ a:focus {
     padding: 6px 8px;
   }
   .view-mode-btn span { display: none; }
-  .header-right { flex: unset; }
   .header-left { min-width: 0; }
   .stats-container { display: none !important; }
 }

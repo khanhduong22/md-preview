@@ -199,6 +199,7 @@ test.describe('Application Features', () => {
     await page.waitForTimeout(500);
 
     // 3. Verify the URL hash contains the share string, mode=preview, hide=1, and share=1
+    await expect.poll(() => page.url()).toContain('#share=');
     const url = page.url();
     expect(url).toContain('#share=');
     expect(url).toContain('mode=preview');
